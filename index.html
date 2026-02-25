@@ -2,443 +2,361 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BNDR // ARCHITECTURAL_MINT</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>BNDR // KINETIC_OPS</title>
     
-    <!-- Production Dependencies -->
+    <!-- External Logic: High-Performance Only -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;600;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --mint: #A7F3D0;
-            --mint-muted: rgba(167, 243, 208, 0.15);
-            --bg: #020202;
-            --font-main: 'Inter', sans-serif;
+            /* THE BNDR PALETTE: BONE, VOID, STEEL */
+            --void: #060606;
+            --charcoal: #0C0D0D;
+            --creme: #FDFBF7;
+            --creme-muted: #A5A8AC;
+            --creme-glow: rgba(253, 251, 247, 0.45);
+            --steel: #4A4D50;
+            
+            /* TYPOGRAPHY LAW */
+            --font-display: 'Syne', sans-serif;
+            --font-ui: 'Inter', sans-serif;
+            
+            /* GRID & DYNAMICS */
             --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
-            --safe-area: 60px;
-            --dof-blur: 8px;
+            --safe-area: max(40px, env(safe-area-inset-left));
         }
 
-        @media (max-width: 768px) { :root { --safe-area: 30px; --dof-blur: 4px; } }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; outline: none; -webkit-tap-highlight-color: transparent; }
-
+        /* HARDWARE RESET */
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
         body {
-            background: var(--bg);
-            color: #fff;
-            font-family: var(--font-main);
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
+            background: var(--void);
+            color: var(--creme);
+            font-family: var(--font-ui);
+            overscroll-behavior: none;
+            height: 700vh; /* Extended timeline */
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
 
-        /* --- Forensic Engine Layers --- */
-        #render-engine {
-            position: fixed; inset: 0; z-index: -1;
-            pointer-events: none;
-            background: radial-gradient(circle at 50% 50%, #0a0a0a 0%, #020202 100%);
+        @media (pointer: fine) { * { cursor: none !important; } }
+
+        /* --- ATMOSPHERIC LAYERS --- */
+        #grain-layer {
+            position: fixed; inset: 0; z-index: 9999;
+            pointer-events: none; opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
         }
 
-        .noise-overlay {
-            position: fixed; inset: 0; z-index: 9998;
-            pointer-events: none; opacity: 0.04;
-            background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="n"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23n)"/%3E%3C/svg%3E');
+        #bg-canvas {
+            position: fixed; inset: 0; z-index: 0;
+            background: radial-gradient(circle at 50% 50%, #111 0%, var(--void) 100%);
         }
 
-        #custom-cursor {
-            position: fixed; top: 0; left: 0;
-            width: 8px; height: 8px;
-            background: var(--mint);
-            border-radius: 50%;
-            z-index: 9999; pointer-events: none;
-            mix-blend-mode: exclusion;
-            will-change: transform;
+        /* --- HARDWARE CURSOR --- */
+        #cursor {
+            position: fixed; top: 0; left: 0; width: 6px; height: 6px;
+            background: var(--creme); border-radius: 50%;
+            z-index: 10001; pointer-events: none;
+        }
+        #cursor-follower {
+            position: fixed; top: 0; left: 0; width: 40px; height: 40px;
+            border: 0.5px solid var(--steel); border-radius: 50%;
+            z-index: 10000; pointer-events: none;
         }
 
-        /* --- Component Architecture --- */
-        #loader-portal {
-            position: fixed; inset: 0; z-index: 10000;
-            background: var(--bg);
-            display: flex; flex-direction: column;
-            justify-content: flex-end; padding: var(--safe-area);
-        }
-        
-        .loader-stats { border-left: 1px solid var(--mint-muted); padding-left: 24px; overflow: hidden; }
-        .loader-id { font-size: 10px; letter-spacing: 0.6em; color: var(--mint); text-transform: uppercase; margin-bottom: 8px; }
-        .loader-val { font-size: 18vw; font-weight: 900; line-height: 0.8; font-variant-numeric: tabular-nums; letter-spacing: -0.05em; }
-
+        /* --- NAVIGATION --- */
         nav {
             position: fixed; top: 40px; left: var(--safe-area); right: var(--safe-area);
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: space-between; align-items: baseline;
             z-index: 1000; mix-blend-mode: difference;
-            opacity: 0; visibility: hidden;
+        }
+        .logo { font-family: var(--font-display); font-size: 2rem; letter-spacing: -0.05em; }
+        .nav-links { display: flex; gap: 40px; font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; }
+
+        /* --- INITIAL LOADER --- */
+        #loader {
+            position: fixed; inset: 0; z-index: 10002; background: var(--void);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .load-pct { font-family: var(--font-display); font-size: 15vw; line-height: 0.8; }
+
+        /* --- KINETIC VIEWPORT --- */
+        #viewport-3d {
+            position: fixed; inset: 0; z-index: 10;
+            display: flex; align-items: center; justify-content: center;
+            perspective: 2000px; pointer-events: none;
+        }
+        #carousel-container {
+            position: relative; width: 400px; height: 560px;
+            transform-style: preserve-3d; will-change: transform;
+        }
+        .card {
+            position: absolute; inset: 0; background: var(--charcoal);
+            border: 1px solid rgba(253, 251, 247, 0.05); overflow: hidden;
+            backface-visibility: hidden; transform-style: preserve-3d;
+        }
+        .card img {
+            width: 100%; height: 100%; object-fit: cover; opacity: 0.4;
+            filter: grayscale(1); transform: scale(1.1);
+            transition: opacity 1s, filter 1s, transform 1s;
+        }
+        .card.active img { opacity: 1; filter: grayscale(0); transform: scale(1); }
+        .card.active { border-color: var(--creme-glow); box-shadow: 0 0 40px var(--creme-glow); }
+
+        /* --- CONTENT SCROLL LAYERS --- */
+        main { position: relative; z-index: 20; width: 100%; }
+        section {
+            height: 100vh; width: 100%; display: flex; align-items: center;
+            padding: 0 var(--safe-area); pointer-events: none;
+        }
+        
+        .hero-text {
+            width: 100%; max-width: 1200px;
+        }
+        .hero-text h2 {
+            font-family: var(--font-display); font-size: clamp(3rem, 10vw, 8rem);
+            line-height: 0.9; text-transform: uppercase; letter-spacing: -0.04em;
+        }
+        .hero-text p {
+            font-size: 1rem; max-width: 400px; margin-top: 2rem;
+            color: var(--creme-muted); line-height: 1.6; font-weight: 300;
         }
 
-        .brand-unit { display: flex; align-items: center; gap: 15px; }
-        .brand-sym { width: 12px; height: 12px; background: var(--mint); }
-        .brand-txt { font-weight: 900; font-size: 1.4rem; letter-spacing: -0.04em; }
-
-        .nav-matrix { display: flex; gap: 32px; }
-        .nav-trigger {
-            font-size: 10px; letter-spacing: 0.35em; text-transform: uppercase;
-            color: rgba(255,255,255,0.4); text-decoration: none;
-            position: relative; padding: 12px 0;
-            transition: color 0.5s var(--ease-out-expo);
+        .side-metric {
+            position: absolute; right: var(--safe-area); font-family: var(--font-display);
+            font-size: 12vw; opacity: 0.03; text-transform: uppercase;
         }
-        .nav-trigger.active { color: var(--mint); }
-        .nav-trigger::before {
-            content: ''; position: absolute; bottom: 0; left: 0; width: 100%;
-            height: 1px; background: var(--mint); transform: scaleX(0);
-            transform-origin: right; transition: transform 0.7s var(--ease-out-expo);
-        }
-        .nav-trigger.active::before { transform: scaleX(1); transform-origin: left; }
 
-        /* --- Viewport Sections --- */
-        .stage {
-            position: absolute; inset: 0;
-            padding: 140px var(--safe-area) var(--safe-area);
-            display: none; opacity: 0; visibility: hidden;
-            will-change: opacity, transform;
-        }
-        .stage.active { display: flex; flex-direction: column; }
-
-        /* --- High-End 3D Engine --- */
-        #carousel-viewport { 
-            flex: 1; display: flex; align-items: center; justify-content: center;
-            perspective: 2500px; transform-style: preserve-3d;
-        }
-        .carousel-anchor { position: relative; width: 340px; height: 480px; transform-style: preserve-3d; }
-        .carousel-node {
-            position: absolute; inset: 0;
-            background: #050505; border: 1px solid rgba(255,255,255,0.03);
-            overflow: hidden; transform-origin: center;
-            backface-visibility: hidden; will-change: transform, opacity, filter;
-        }
-        .carousel-node img { width: 100%; height: 100%; object-fit: cover; opacity: 0.4; filter: grayscale(1); transition: 1.2s var(--ease-out-expo); }
-        .carousel-node.active-focus { border-color: var(--mint); box-shadow: 0 0 50px rgba(167, 243, 208, 0.05); }
-        .carousel-node.active-focus img { opacity: 1; filter: grayscale(0); transform: scale(1.08); }
-
-        /* --- Archive Forensic Grid --- */
-        .archive-scroll { margin-top: 40px; width: 100%; }
-        .archive-row {
-            display: grid; grid-template-columns: 100px 1fr auto;
-            align-items: center; padding: 3vh 0; border-bottom: 1px solid rgba(255,255,255,0.05);
-            text-decoration: none; color: inherit; transition: 0.5s var(--ease-out-expo);
-            position: relative; z-index: 10;
-        }
-        .archive-row:hover { color: var(--mint); transform: translateX(15px); }
-        .row-meta { font-size: 11px; opacity: 0.25; font-variant-numeric: tabular-nums; }
-        .row-head { font-size: clamp(2.5rem, 6vw, 8rem); font-weight: 100; text-transform: uppercase; letter-spacing: -0.04em; line-height: 0.9; }
-        .row-cat { font-size: 10px; opacity: 0.2; text-transform: uppercase; letter-spacing: 0.3em; text-align: right; }
-
-        #hover-preview {
-            position: fixed; width: 320px; height: 440px;
-            pointer-events: none; z-index: 5; opacity: 0;
-            border-radius: 1px; overflow: hidden; transform: translate(-50%, -50%) scale(0.9);
-            will-change: transform, opacity; transition: opacity 0.4s ease;
-        }
-        #hover-preview img { width: 100%; height: 100%; object-fit: cover; }
-
-        /* --- Studio Topology --- */
-        .studio-wrap { max-width: 1200px; margin-top: auto; }
-        .studio-line { font-size: clamp(2rem, 4vw, 5rem); font-weight: 200; line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 20px; }
-        .accent { color: var(--mint); font-style: italic; font-weight: 300; }
-
+        /* --- FOOTER HUD --- */
         footer {
             position: fixed; bottom: 40px; left: var(--safe-area); right: var(--safe-area);
-            display: flex; justify-content: space-between; align-items: center;
-            font-size: 9px; letter-spacing: 0.5em; text-transform: uppercase;
-            opacity: 0; mix-blend-mode: difference;
+            display: flex; justify-content: space-between; align-items: flex-end;
+            z-index: 1000;
         }
+        .status-pill {
+            padding: 8px 16px; border: 1px solid var(--steel); border-radius: 100px;
+            font-size: 9px; font-weight: 600; letter-spacing: 0.1em; color: var(--creme-muted);
+        }
+
+        /* --- HELPER CLASSES --- */
+        .reveal { overflow: hidden; }
+        .reveal span { display: block; transform: translateY(105%); }
     </style>
 </head>
 <body>
 
-    <div class="noise-overlay"></div>
-    <div id="custom-cursor"></div>
-    <div id="render-engine"></div>
+    <div id="grain-layer"></div>
+    <div id="bg-canvas"></div>
+    <div id="cursor"></div>
+    <div id="cursor-follower"></div>
 
-    <!-- BOOT SYSTEM -->
-    <div id="loader-portal">
-        <div class="loader-stats">
-            <p class="loader-id">BNDR // MINT_v4.0</p>
-            <h1 class="loader-val" id="pct-out">00</h1>
-        </div>
+    <div id="loader">
+        <div class="load-pct" id="load-val">00</div>
+        <div style="font-size: 10px; letter-spacing: 0.5em; margin-top: 20px;">CALIBRATING ENGINE</div>
     </div>
 
-    <!-- GLOBAL HUD -->
-    <nav id="hud-nav">
-        <div class="brand-unit">
-            <div class="brand-sym"></div>
-            <div class="brand-txt">BNDR</div>
-        </div>
-        <div class="nav-matrix">
-            <a href="#carousel" class="nav-trigger active" data-path="carousel">Carousel</a>
-            <a href="#archive" class="nav-trigger" data-path="archive">Archive</a>
-            <a href="#studio" class="nav-trigger" data-path="studio">Studio</a>
+    <nav>
+        <div class="logo">BNDR</div>
+        <div class="nav-links">
+            <div>Archive</div>
+            <div>Logic</div>
+            <div>Contact</div>
         </div>
     </nav>
 
-    <!-- SECTION: CAROUSEL -->
-    <section id="path-carousel" class="stage active">
-        <div id="carousel-viewport">
-            <div class="carousel-anchor" id="engine-3d"></div>
-        </div>
-        <div style="text-align: center; opacity: 0.15; font-size: 8px; letter-spacing: 0.6em; text-transform: uppercase;">
-            Engine Status: Kinetic _ Tracking Active
-        </div>
-    </section>
+    <div id="viewport-3d">
+        <div id="carousel-container"></div>
+    </div>
 
-    <!-- SECTION: ARCHIVE -->
-    <section id="path-archive" class="stage">
-        <div id="hover-preview"><img src="" id="preview-buffer"></div>
-        <div class="archive-scroll" id="archive-engine"></div>
-    </section>
+    <main>
+        <!-- Section 01: The Hook -->
+        <section id="trigger-1">
+            <div class="hero-text">
+                <h2 class="reveal"><span>Static is</span></h2>
+                <h2 class="reveal"><span>Dead Space</span></h2>
+                <p>We build objects that react. We don't ask for permission to occupy the screen—we demand it through kinetic friction and cold, precise movement.</p>
+            </div>
+            <div class="side-metric">01</div>
+        </section>
 
-    <!-- SECTION: STUDIO -->
-    <section id="path-studio" class="stage">
-        <div class="studio-wrap">
-            <p class="studio-line" id="studio-text">
-                Architecture is not static. <br>
-                BNDR develops <span class="accent">reactive environments</span> <br>
-                and autonomous logic protocols.
-            </p>
-            <div style="margin-top: 40px; width: 100px; height: 1px; background: var(--mint-muted);"></div>
+        <!-- Section 02: Space for the Twirl -->
+        <section id="trigger-2" style="height: 200vh;"></section>
+
+        <!-- Section 03: The Logic -->
+        <section id="trigger-3">
+            <div class="hero-text" style="margin-left: auto; text-align: right;">
+                <h2 class="reveal"><span>Mechanical</span></h2>
+                <h2 class="reveal"><span>Hierarchy</span></h2>
+                <p style="margin-left: auto;">Every pixel is a component. Every interaction is a command. We've stripped the "user experience" back to the hardware, where it belongs.</p>
+            </div>
+            <div class="side-metric" style="left: var(--safe-area); right: auto;">02</div>
+        </section>
+
+        <!-- Section 04: The Exit -->
+        <section id="trigger-4">
+            <div class="hero-text">
+                <h2 class="reveal"><span>The New</span></h2>
+                <h2 class="reveal"><span>Standard</span></h2>
+                <p>Built for the operators. Optimized for the eye. Verified by the code. This is the BNDR protocol in its final, unyielding form.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="status-pill" id="scroll-label">IDLE_SYSTEM</div>
+        <div style="text-align: right;">
+            <div style="font-size: 9px; opacity: 0.5;">CURRENT_ELV</div>
+            <div class="logo" style="font-size: 1.5rem;" id="elv-val">000</div>
         </div>
-    </section>
-
-    <!-- GLOBAL FOOTER -->
-    <footer id="hud-footer">
-        <div id="local-time">00:00:00</div>
-        <div style="opacity: 0.4;">Forensic Production Engine</div>
-        <div id="perf-monitor">60 FPS</div>
     </footer>
 
     <script>
-        /**
-         * BNDR FORENSIC ENGINE
-         * Commercial Specification v4.0
-         */
+        gsap.registerPlugin(ScrollTrigger);
 
-        const DATA_SET = [
-            { id: '01', title: 'LifeMatrix', cat: 'Biometric', img: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800' },
-            { id: '02', title: 'The Feed', cat: 'Interface', img: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800' },
-            { id: '03', title: 'Aura', cat: 'Ambient', img: 'https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=800' },
-            { id: '04', title: 'Voss', cat: 'Symmetry', img: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=800' },
-            { id: '05', title: 'Ironline', cat: 'Industrial', img: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=800' },
-            { id: '06', title: 'Protocol', cat: 'System', img: 'https://images.unsplash.com/photo-1586528116311-ad8ed7c663e0?q=80&w=800' }
+        const ASSETS = [
+            'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=800',
+            'https://images.unsplash.com/photo-1493246507139-91e8bef99c02?q=80&w=800',
+            'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=800',
+            'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800',
+            'https://images.unsplash.com/photo-1483058712412-4245e9b90334?q=80&w=800',
+            'https://images.unsplash.com/photo-1506318137071-a8e063b4b6a1?q=80&w=800'
         ];
 
-        class BNDR {
+        class BNDREngine {
             constructor() {
-                this.dom = {
-                    cursor: document.getElementById('custom-cursor'),
-                    engine3d: document.getElementById('engine-3d'),
-                    archive: document.getElementById('archive-engine'),
-                    preview: document.getElementById('hover-preview'),
-                    previewImg: document.getElementById('preview-buffer'),
-                    time: document.getElementById('local-time'),
-                    fps: document.getElementById('perf-monitor')
-                };
-
-                this.params = {
-                    rotation: 0,
-                    targetRotation: 0,
-                    friction: 0.075,
-                    isDragging: false,
-                    startX: 0,
-                    radius: window.innerWidth < 768 ? 260 : 580,
-                    path: 'carousel',
-                    fps: 0,
-                    lastFrameTime: performance.now()
-                };
-
+                this.container = document.getElementById('carousel-container');
+                this.cards = [];
+                this.scroll = { current: 0, target: 0, vel: 0 };
                 this.init();
             }
 
             init() {
-                this.setupCore();
-                this.setup3DEngine();
-                this.setupArchiveGrid();
-                this.attachListeners();
-                this.bootSequence();
-                this.tick();
+                this.createCards();
+                this.setupCursor();
+                this.setupScrollTriggers();
+                this.animateLoader();
+                this.render();
             }
 
-            setupCore() {
-                // High-precision pointer tracking
-                this.curX = gsap.quickTo(this.dom.cursor, "x", {duration: 0.15, ease: "power3"});
-                this.curY = gsap.quickTo(this.dom.cursor, "y", {duration: 0.15, ease: "power3"});
-                
-                // Portal tracking
-                this.portX = gsap.quickTo(this.dom.preview, "x", {duration: 0.45, ease: "power3"});
-                this.portY = gsap.quickTo(this.dom.preview, "y", {duration: 0.45, ease: "power3"});
-
-                // Chronos
-                setInterval(() => {
-                    this.dom.time.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
-                }, 1000);
-            }
-
-            setup3DEngine() {
-                const angleStep = (Math.PI * 2) / DATA_SET.length;
-                DATA_SET.forEach((item, i) => {
-                    const node = document.createElement('div');
-                    node.className = 'carousel-node';
-                    node.innerHTML = `<img src="${item.img}" alt="${item.title}">`;
-                    this.dom.engine3d.appendChild(node);
-                });
-                this.nodes = document.querySelectorAll('.carousel-node');
-            }
-
-            setupArchiveGrid() {
-                DATA_SET.forEach(item => {
-                    const row = document.createElement('a');
-                    row.className = 'archive-row';
-                    row.href = '#';
-                    row.innerHTML = `
-                        <span class="row-meta">ID // ${item.id}</span>
-                        <span class="row-head">${item.title}</span>
-                        <span class="row-cat">${item.cat}</span>
-                    `;
+            createCards() {
+                ASSETS.forEach((src, i) => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `<img src="${src}" alt="asset_${i}">`;
+                    this.container.appendChild(card);
                     
-                    row.addEventListener('mouseenter', () => {
-                        this.dom.previewImg.src = item.img;
-                        gsap.to(this.dom.preview, { opacity: 1, scale: 1, duration: 0.6, ease: "power4.out" });
+                    this.cards.push({
+                        el: card,
+                        img: card.querySelector('img'),
+                        setter: {
+                            x: gsap.quickSetter(card, "x", "px"),
+                            y: gsap.quickSetter(card, "y", "px"),
+                            z: gsap.quickSetter(card, "z", "px"),
+                            rY: gsap.quickSetter(card, "rotationY", "deg"),
+                            scale: gsap.quickSetter(card, "scale"),
+                            opacity: gsap.quickSetter(card, "opacity")
+                        }
                     });
-                    
-                    row.addEventListener('mouseleave', () => {
-                        gsap.to(this.dom.preview, { opacity: 0, scale: 0.9, duration: 0.4, ease: "power4.in" });
-                    });
-                    
-                    this.dom.archive.appendChild(row);
                 });
             }
 
-            attachListeners() {
+            setupCursor() {
+                const c = document.getElementById('cursor');
+                const f = document.getElementById('cursor-follower');
+                const xC = gsap.quickTo(c, "x", {duration: 0.1});
+                const yC = gsap.quickTo(c, "y", {duration: 0.1});
+                const xF = gsap.quickTo(f, "x", {duration: 0.4});
+                const yF = gsap.quickTo(f, "y", {duration: 0.4});
+
                 window.addEventListener('mousemove', e => {
-                    this.curX(e.clientX);
-                    this.curY(e.clientY);
-                    if(this.params.path === 'archive') {
-                        this.portX(e.clientX);
-                        this.portY(e.clientY);
-                    }
-                });
-
-                // Interaction Matrix
-                window.addEventListener('mousedown', e => { this.params.isDragging = true; this.params.startX = e.clientX; });
-                window.addEventListener('mouseup', () => this.params.isDragging = false);
-                window.addEventListener('mousemove', e => {
-                    if(!this.params.isDragging) return;
-                    const delta = e.clientX - this.params.startX;
-                    this.params.targetRotation += delta * 0.22;
-                    this.params.startX = e.clientX;
-                });
-
-                window.addEventListener('wheel', e => {
-                    if(this.params.path !== 'carousel') return;
-                    this.params.targetRotation -= e.deltaY * 0.08;
-                }, {passive: true});
-
-                // Path Routing
-                document.querySelectorAll('.nav-trigger').forEach(trigger => {
-                    trigger.addEventListener('click', e => {
-                        e.preventDefault();
-                        this.navigate(trigger.dataset.path);
-                    });
+                    xC(e.clientX - 3); yC(e.clientY - 3);
+                    xF(e.clientX - 20); yF(e.clientY - 20);
                 });
             }
 
-            navigate(nextPath) {
-                if(this.params.path === nextPath) return;
-                
-                const current = document.getElementById(`path-${this.params.path}`);
-                const next = document.getElementById(`path-${nextPath}`);
-                
-                document.querySelectorAll('.nav-trigger').forEach(t => t.classList.remove('active'));
-                document.querySelector(`[data-path="${nextPath}"]`).classList.add('active');
-
+            animateLoader() {
                 const tl = gsap.timeline();
-                
-                tl.to(current, { opacity: 0, y: -30, filter: 'blur(10px)', duration: 0.6, ease: "power3.in", onComplete: () => {
-                    current.classList.remove('active');
-                    current.style.visibility = "hidden";
-                }});
-                
-                tl.call(() => {
-                    this.params.path = nextPath;
-                    next.classList.add('active');
-                    next.style.visibility = "visible";
-                    gsap.set(next, { opacity: 0, y: 30, filter: 'blur(10px)' });
+                tl.to("#load-val", {
+                    innerText: 100,
+                    duration: 1.5,
+                    snap: { innerText: 1 },
+                    ease: "power2.inOut"
                 });
-                
-                tl.to(next, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.8, ease: "power4.out" });
-
-                if(nextPath === 'studio') {
-                    gsap.from('#studio-text', { opacity: 0, scale: 0.98, duration: 1.5, delay: 0.2, ease: "power2.out" });
-                }
+                tl.to("#loader", {
+                    yPercent: -100,
+                    duration: 1.2,
+                    ease: "expo.inOut"
+                });
+                tl.to(".reveal span", {
+                    y: 0,
+                    stagger: 0.1,
+                    duration: 1.5,
+                    ease: "expo.out"
+                }, "-=0.5");
             }
 
-            bootSequence() {
-                const counter = document.getElementById('pct-out');
-                let tracker = { val: 0 };
-                
-                gsap.to(tracker, {
-                    val: 100, duration: 2.8, ease: "power4.inOut",
-                    onUpdate: () => counter.textContent = Math.round(tracker.val).toString().padStart(2, '0'),
-                    onComplete: () => {
-                        gsap.to('#loader-portal', { yPercent: -100, duration: 1.4, ease: "power4.inOut" });
-                        gsap.to(['nav', 'footer'], { autoAlpha: 1, duration: 1, delay: 0.6 });
-                        gsap.from('.carousel-node', { 
-                            z: -1500, opacity: 0, stagger: 0.08, duration: 2.2, ease: "power4.out" 
-                        });
+            setupScrollTriggers() {
+                window.addEventListener('scroll', () => {
+                    this.scroll.target = window.scrollY;
+                    document.getElementById('elv-val').innerText = Math.round(window.scrollY / 10).toString().padStart(3, '0');
+                    document.getElementById('scroll-label').innerText = window.scrollY > 10 ? 'SYSTEM_ACTIVE' : 'IDLE_SYSTEM';
+                });
+            }
+
+            render() {
+                // Smooth interpolation
+                const last = this.scroll.current;
+                this.scroll.current += (this.scroll.target - this.scroll.current) * 0.1;
+                this.scroll.vel = this.scroll.current - last;
+
+                const rotation = this.scroll.current * 0.15;
+                const radius = window.innerWidth < 768 ? 250 : 500;
+                const step = (Math.PI * 2) / this.cards.length;
+
+                this.cards.forEach((card, i) => {
+                    const angle = (rotation * (Math.PI / 180)) + (i * step);
+                    
+                    const x = Math.sin(angle) * radius;
+                    const z = Math.cos(angle) * radius;
+                    const y = Math.sin(angle * 2) * 80; // Helix twirl
+
+                    // Normalizing Z for visual priority
+                    const zNorm = (z + radius) / (radius * 2);
+                    
+                    card.setter.x(x);
+                    card.setter.y(y);
+                    card.setter.z(z);
+                    card.setter.rY(angle * (180 / Math.PI));
+                    card.setter.scale(0.5 + (zNorm * 0.5));
+                    card.setter.opacity(0.1 + (zNorm * 0.9));
+                    card.el.style.zIndex = Math.round(z + 1000);
+
+                    // Image Parallax within cards
+                    gsap.set(card.img, { x: -this.scroll.vel * 2 });
+
+                    if (zNorm > 0.9) {
+                        card.el.classList.add('active');
+                    } else {
+                        card.el.classList.remove('active');
                     }
                 });
-            }
 
-            tick() {
-                const now = performance.now();
-                this.params.fps = Math.round(1000 / (now - this.params.lastFrameTime));
-                this.params.lastFrameTime = now;
-                if(now % 30 < 1) this.dom.fps.textContent = `${this.params.fps} FPS`;
-
-                // VRR-Independent Physics
-                if(!this.params.isDragging) this.params.targetRotation -= 0.12;
-                this.params.rotation += (this.params.targetRotation - this.params.rotation) * this.params.friction;
-
-                const angleStep = (Math.PI * 2) / DATA_SET.length;
-                
-                this.nodes.forEach((node, i) => {
-                    const angle = (this.params.rotation * (Math.PI / 180)) + (i * angleStep);
-                    const x = Math.sin(angle) * this.params.radius;
-                    const z = Math.cos(angle) * this.params.radius;
-                    
-                    // Depth Map Calculations
-                    const normalizedDepth = (z + this.params.radius) / (this.params.radius * 2);
-                    const scale = 0.55 + (0.45 * normalizedDepth);
-                    const opacity = 0.05 + (0.95 * normalizedDepth);
-
-                    gsap.set(node, {
-                        x: x,
-                        z: z,
-                        scale: scale,
-                        opacity: opacity,
-                        zIndex: Math.round(z + 1000),
-                        filter: `blur(${(1 - normalizedDepth) * 12}px)`
-                    });
-
-                    if(normalizedDepth > 0.95) node.classList.add('active-focus');
-                    else node.classList.remove('active-focus');
+                // Tilt viewport based on velocity
+                gsap.set(this.container, {
+                    rotationX: -this.scroll.vel * 0.2,
+                    rotationZ: this.scroll.vel * 0.05
                 });
 
-                requestAnimationFrame(() => this.tick());
+                requestAnimationFrame(() => this.render());
             }
         }
 
-        // ENTRY
-        window.onload = () => new BNDR();
+        window.onload = () => new BNDREngine();
     </script>
 </body>
 </html>
