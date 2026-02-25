@@ -7,875 +7,1332 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     
     <style>
         :root {
             --void: #020202;
             --charcoal: #0A0A0B;
             --bone: #E8E4DF;
-            --steel: #2A2A2D;
+            --steel: #1E1E21;
+            --mid: #2A2A2D;
             --plasma: #CCFF00;
-            --glass: rgba(232, 228, 223, 0.03);
-            --glass-border: rgba(232, 228, 223, 0.08);
-            
-            --font-display: 'Outfit', sans-serif;
-            --font-mono: 'Space Mono', monospace;
-            
-            --safe-area: max(4vw, env(safe-area-inset-left));
-            --mouse-x: 50%;
-            --mouse-y: 50%;
+            --red: #FF2D55;
+            --blue: #00F5FF;
+            --safe: max(4vw, env(safe-area-inset-left));
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; cursor: none !important; }
-        
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; cursor: none !important; }
+
+        html { scroll-behavior: auto; }
+
         body {
             background: var(--void);
             color: var(--bone);
-            font-family: var(--font-display);
+            font-family: 'Helvetica Neue', Arial, sans-serif;
             overscroll-behavior: none;
-            height: 700vh;
+            height: 800vh;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             overflow-x: hidden;
         }
+
         ::-webkit-scrollbar { display: none; }
 
-        /* --- 12-COLUMN ARCHITECTURAL GRID --- */
-        #arch-grid {
-            position: fixed; inset: 0; z-index: 1; pointer-events: none;
-            display: grid; grid-template-columns: repeat(12, 1fr); gap: 2vw;
-            padding: 0 var(--safe-area); opacity: 0.15; mix-blend-mode: overlay;
-        }
-        #arch-grid div { border-left: 1px solid var(--steel); height: 100%; }
-        #arch-grid div:last-child { border-right: 1px solid var(--steel); }
-
-        /* --- CANVAS & BACKGROUND SYSTEMS --- */
-        #grain-layer {
-            position: fixed; top: -30%; left: -30%; width: 160%; height: 160%;
-            z-index: 9999; pointer-events: none; opacity: 0.05;
-            background-repeat: repeat; background-size: 200px 200px;
-            mix-blend-mode: overlay; will-change: transform;
-        }
-        #bg-canvas, #particle-canvas {
-            position: fixed; inset: 0; z-index: 0; pointer-events: none;
-        }
-        #ambient-glow {
-            position: fixed; top: 0; left: 0; width: 600px; height: 600px;
-            background: radial-gradient(circle, rgba(204, 255, 0, 0.04) 0%, transparent 70%);
-            border-radius: 50%; pointer-events: none; z-index: 2;
-            transform: translate(-50%, -50%); will-change: transform;
-        }
-        .bg-gradient-overlay {
-            position: fixed; inset: 0; z-index: 1; pointer-events: none;
-            background: radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(42, 42, 45, 0.4) 0%, var(--void) 60%);
-        }
-
-        /* --- OPTICAL TRACKING CURSOR --- */
-        #cursor-dot {
-            position: fixed; top: 0; left: 0; width: 4px; height: 4px;
-            background: var(--plasma); border-radius: 50%;
-            z-index: 10001; pointer-events: none;
-            mix-blend-mode: difference; will-change: transform;
-        }
-        #cursor-ring {
-            position: fixed; top: 0; left: 0; width: 32px; height: 32px;
-            border: 1px solid var(--bone); border-radius: 50px;
-            z-index: 10000; pointer-events: none;
-            display: flex; align-items: center; justify-content: center;
-            font-family: var(--font-mono); font-size: 8px; font-weight: 700;
-            letter-spacing: 0.1em; color: var(--void); opacity: 0.8;
-            will-change: transform, width, height, background;
-            transition: width 0.3s cubic-bezier(0.19, 1, 0.22, 1), height 0.3s cubic-bezier(0.19, 1, 0.22, 1), background 0.3s;
-        }
-        .cursor-hover #cursor-ring {
-            width: 80px; height: 80px; background: var(--bone);
-            border-color: transparent; mix-blend-mode: normal;
-        }
-        #cursor-label { opacity: 0; transition: opacity 0.2s; white-space: nowrap; }
-        .cursor-hover #cursor-label { opacity: 1; }
-
-        /* --- CINEMATIC MECHANICAL LOADER --- */
-        #loader {
-            position: fixed; inset: 0; z-index: 10002; background: var(--void);
-            display: flex; flex-direction: column; justify-content: flex-end;
-            padding: var(--safe-area); will-change: transform;
-        }
-        .scan-line {
-            position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.3) 51%);
-            background-size: 100% 4px; pointer-events: none; z-index: 10; opacity: 0.3;
-        }
-        .loader-metrics {
-            display: flex; justify-content: space-between; align-items: flex-end;
-            font-family: var(--font-mono); width: 100%; border-top: 1px solid var(--steel);
-            padding-top: 2vh; margin-bottom: 2vh;
-        }
-        .loader-count { font-size: clamp(4rem, 15vw, 15rem); line-height: 0.8; letter-spacing: -0.05em; font-family: var(--font-display); }
-        .loader-status { font-size: 12px; letter-spacing: 0.3em; color: var(--plasma); text-transform: uppercase; }
-        .loader-bar-bg { width: 100%; height: 2px; background: var(--steel); position: relative; }
-        .loader-bar-fill { 
-            position: absolute; left: 0; top: 0; height: 100%; width: 100%;
-            background: var(--bone); transform-origin: left; transform: scaleX(0);
-        }
-
-        /* --- HUD & FOOTER DENSITY --- */
-        .hud {
-            position: fixed; z-index: 1000; font-family: var(--font-mono);
-            font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
-            color: var(--bone); mix-blend-mode: difference;
-        }
-        .hud-top-left { top: 40px; left: var(--safe-area); font-family: var(--font-display); font-size: 24px; font-weight: 900; letter-spacing: -0.02em; }
-        .hud-top-right { top: 40px; right: var(--safe-area); display: flex; gap: 40px; }
-        
-        .nav-link { position: relative; padding: 10px 0; display: inline-block; }
-        .nav-link::after {
-            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 1px;
-            background: var(--bone); transform-origin: left; transform: scaleX(0);
-            transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-        }
-        .nav-link:hover::after { transform: scaleX(1); }
-
-        footer {
-            position: fixed; bottom: 40px; left: var(--safe-area); right: var(--safe-area);
-            display: flex; justify-content: space-between; align-items: flex-end;
-            z-index: 1000; font-family: var(--font-mono); font-size: 10px; opacity: 0;
-            border-top: 1px solid var(--steel); padding-top: 10px;
-        }
-        .footer-col { display: flex; flex-direction: column; gap: 4px; }
-        .footer-col.right { text-align: right; }
-        
-        /* Progress Indicators */
-        .progress-bottom { position: fixed; bottom: 0; left: 0; height: 2px; width: 100%; background: var(--steel); z-index: 1001; }
-        .progress-bottom-fill { height: 100%; background: var(--plasma); transform-origin: left; transform: scaleX(0); }
-        .progress-side { position: fixed; right: 0; top: 0; width: 2px; height: 100%; background: var(--steel); z-index: 1001; }
-        .progress-side-fill { width: 100%; background: var(--plasma); transform-origin: top; transform: scaleY(0); }
-
-        /* --- 3D DNA HELIX CAROUSEL --- */
-        #viewport-3d {
-            position: fixed; inset: 0; z-index: 10;
-            display: flex; align-items: center; justify-content: center;
-            perspective: 1500px; pointer-events: none;
-        }
-        #carousel-container {
-            position: relative; width: 350px; height: 500px;
-            transform-style: preserve-3d; will-change: transform;
-        }
-        .card {
-            position: absolute; inset: 0; border-radius: 12px; overflow: hidden;
-            transform-style: preserve-3d; will-change: transform;
-            border: 1px solid var(--glass-border);
-            /* Layered gradients for depth */
-            background: linear-gradient(135deg, rgba(20,20,22,0.9), rgba(5,5,5,0.95)), var(--charcoal);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.1);
-        }
-        .card img {
-            width: 100%; height: 100%; object-fit: cover; opacity: 0.4;
-            mix-blend-mode: luminosity; transform: scale(1.1); pointer-events: none;
-        }
-        /* Chromatic Aberration Pseudo-elements */
-        .card::before, .card::after {
-            content: ''; position: absolute; inset: 0; background: inherit; z-index: -1;
-            border-radius: inherit; opacity: 0; will-change: transform, opacity;
-        }
-        .card::before { background-color: rgba(255,0,0,0.5); mix-blend-mode: screen; }
-        .card::after { background-color: rgba(0,255,255,0.5); mix-blend-mode: screen; }
-        
-        /* --- SCROLL ARCHITECTURE & TYPOGRAPHY --- */
-        .vel-skew { will-change: transform; }
-        main { position: relative; z-index: 20; width: 100%; }
-        section {
-            min-height: 100vh; width: 100%; display: flex; flex-direction: column; justify-content: center;
-            padding: 0 var(--safe-area); pointer-events: none; position: relative;
-        }
-        .content-block { width: 100%; max-width: 1400px; margin: 0 auto; }
-        
-        .sec-title {
-            display: flex; align-items: center; font-family: var(--font-mono); font-size: 14px;
-            color: var(--plasma); margin-bottom: 2rem; overflow: hidden;
-        }
-        .sec-title .line { height: 1px; background: var(--plasma); width: 60px; transform-origin: left; transform: scaleX(0); margin-left: 20px; }
-        .sec-title.right { flex-direction: row-reverse; }
-        .sec-title.right .line { margin-left: 0; margin-right: 20px; transform-origin: right; }
-
-        .kinetic-text {
-            font-size: clamp(3rem, 10vw, 12rem); font-weight: 900;
-            line-height: 0.85; text-transform: uppercase; letter-spacing: -0.04em;
-        }
-        .align-right { text-align: right; margin-left: auto; }
-        
-        /* Text Spans */
-        .word { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.1em; margin-bottom: -0.1em; }
-        .char { display: inline-block; transform: translateY(105%); will-change: transform; }
-
-        /* Marquee */
-        .marquee-container {
-            width: 100vw; position: relative; left: calc(-1 * var(--safe-area));
-            border-top: 1px solid var(--steel); border-bottom: 1px solid var(--steel);
-            overflow: hidden; padding: 2vh 0; background: var(--charcoal);
-            pointer-events: auto;
-        }
-        .marquee-track {
-            display: flex; width: max-content; white-space: nowrap;
-            font-size: clamp(2rem, 6vw, 6rem); font-weight: 900;
-            text-transform: uppercase; line-height: 1; color: transparent;
-            -webkit-text-stroke: 1px rgba(232, 228, 223, 0.3);
+        /* ══════════════════════════════════════════
+           CURSOR SYSTEM
+        ══════════════════════════════════════════ */
+        #cur-dot {
+            position: fixed; top: 0; left: 0;
+            width: 5px; height: 5px;
+            background: var(--plasma);
+            border-radius: 50%;
+            z-index: 99999;
+            pointer-events: none;
+            mix-blend-mode: difference;
             will-change: transform;
         }
-        .marquee-track span { padding: 0 3vw; }
-        .marquee-track span.filled { color: var(--bone); -webkit-text-stroke: 0; }
+        #cur-ring {
+            position: fixed; top: 0; left: 0;
+            width: 36px; height: 36px;
+            border: 1px solid rgba(232,228,223,0.5);
+            border-radius: 50%;
+            z-index: 99998;
+            pointer-events: none;
+            will-change: transform, width, height, border-radius, background;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 7px; letter-spacing: 0.15em;
+            font-family: 'Courier New', monospace;
+            color: var(--void);
+            overflow: hidden;
+            transition: width 0.4s cubic-bezier(0.16,1,0.3,1),
+                        height 0.4s cubic-bezier(0.16,1,0.3,1),
+                        background 0.3s,
+                        border-color 0.3s;
+        }
+        body.c-hover #cur-ring {
+            width: 90px; height: 90px;
+            background: var(--bone);
+            border-color: transparent;
+        }
+        #cur-txt { opacity: 0; transition: opacity 0.2s; white-space: nowrap; }
+        body.c-hover #cur-txt { opacity: 1; }
+        body.c-click #cur-ring { width: 20px; height: 20px; background: var(--plasma); }
+        body.c-click #cur-dot { transform: scale(0) !important; }
 
-        /* Bloom/Glitch utils */
-        .bloom { box-shadow: 0 0 80px rgba(204, 255, 0, 0.15); }
-        .glitch-flicker { animation: flicker 0.2s infinite alternate; }
-        @keyframes flicker { 0% { opacity: 1; clip-path: inset(0 0 0 0); } 100% { opacity: 0.8; clip-path: inset(10% 0 10% 0); } }
-        
-        .magnetic-wrap { display: inline-block; pointer-events: auto; }
-        
-        /* Pinned Section Reveals */
-        .pin-reveal-wrap { clip-path: inset(100% 0 0 0); will-change: clip-path; }
+        /* ══════════════════════════════════════════
+           FIXED LAYERS
+        ══════════════════════════════════════════ */
+        #noise {
+            position: fixed; inset: 0; z-index: 9998;
+            pointer-events: none; opacity: 0.045;
+            mix-blend-mode: overlay;
+        }
 
+        #arch-grid {
+            position: fixed; inset: 0; z-index: 5;
+            display: grid; grid-template-columns: repeat(12, 1fr);
+            padding: 0 var(--safe); pointer-events: none;
+            opacity: 0;
+        }
+        .ag-col { border-left: 1px solid rgba(255,255,255,0.04); height: 100%; }
+        .ag-col:last-child { border-right: 1px solid rgba(255,255,255,0.04); }
+
+        #bg-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+        #gl-canvas { position: fixed; inset: 0; z-index: 2; pointer-events: none; mix-blend-mode: screen; }
+        #glow { position: fixed; width: 700px; height: 700px; border-radius: 50%; pointer-events: none; z-index: 3; background: radial-gradient(circle, rgba(204,255,0,0.05) 0%, transparent 70%); will-change: transform; transform: translate(-350px,-350px); }
+
+        /* ══════════════════════════════════════════
+           LOADER
+        ══════════════════════════════════════════ */
+        #loader {
+            position: fixed; inset: 0; z-index: 99997;
+            background: var(--void);
+            display: grid;
+            grid-template-rows: 1fr auto;
+            padding: var(--safe);
+            overflow: hidden;
+        }
+        .ld-scan {
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(to bottom, transparent, transparent 3px, rgba(0,0,0,0.15) 3px, rgba(0,0,0,0.15) 4px);
+            pointer-events: none; z-index: 2;
+        }
+        .ld-center {
+            display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+            z-index: 1; padding-top: 20vh;
+        }
+        .ld-eyebrow {
+            font-family: 'Courier New', monospace;
+            font-size: 11px; letter-spacing: 0.3em;
+            color: var(--plasma); margin-bottom: 3rem;
+            display: flex; align-items: center; gap: 1.5rem;
+        }
+        .ld-eyebrow::before { content: ''; display: block; width: 30px; height: 1px; background: var(--plasma); }
+        .ld-num {
+            font-size: clamp(6rem, 18vw, 22rem);
+            font-weight: 900;
+            line-height: 0.8;
+            letter-spacing: -0.05em;
+            font-variant-numeric: tabular-nums;
+            color: var(--bone);
+        }
+        .ld-bottom {
+            z-index: 1; border-top: 1px solid var(--steel); padding-top: 2vh;
+            display: flex; justify-content: space-between; align-items: flex-end;
+        }
+        .ld-status {
+            font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 0.25em;
+            color: rgba(232,228,223,0.4); text-transform: uppercase;
+        }
+        .ld-bar-wrap { width: 40%; height: 1px; background: var(--steel); position: relative; }
+        .ld-bar { position: absolute; inset: 0; background: var(--bone); transform-origin: left; transform: scaleX(0); }
+
+        /* ══════════════════════════════════════════
+           HUD / NAV
+        ══════════════════════════════════════════ */
+        .hud {
+            position: fixed; z-index: 1000; font-family: 'Courier New', monospace;
+            font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--bone); pointer-events: none;
+        }
+        #hud-logo {
+            top: 38px; left: var(--safe);
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 22px; font-weight: 900;
+            letter-spacing: -0.03em; font-size: clamp(18px,2.5vw,26px);
+            pointer-events: auto;
+            opacity: 0;
+        }
+        #hud-nav {
+            top: 42px; right: var(--safe);
+            display: flex; gap: 3vw; pointer-events: auto; opacity: 0;
+            align-items: center;
+        }
+        .nav-item {
+            position: relative; padding: 8px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 10px; letter-spacing: 0.25em;
+            display: inline-block; overflow: visible;
+        }
+        .nav-item::after {
+            content: '';
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 1px;
+            background: var(--plasma); transform-origin: right; transform: scaleX(0);
+            transition: transform 0.5s cubic-bezier(0.76,0,0.24,1);
+        }
+        .nav-item:hover::after { transform-origin: left; transform: scaleX(1); }
+        .nav-item:hover { color: var(--plasma); }
+
+        #hud-footer {
+            bottom: 36px; left: var(--safe); right: var(--safe);
+            display: flex; justify-content: space-between; align-items: flex-end;
+            border-top: 1px solid var(--steel); padding-top: 12px;
+            opacity: 0; pointer-events: auto;
+        }
+        .hud-col { display: flex; flex-direction: column; gap: 5px; }
+        .hud-col.center { align-items: center; }
+        .hud-col.right { align-items: flex-end; }
+        .hud-accent { color: var(--plasma); }
+        .hud-dim { opacity: 0.35; }
+
+        /* ══════════════════════════════════════════
+           PROGRESS
+        ══════════════════════════════════════════ */
+        #prog-x {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 2px;
+            z-index: 1001; pointer-events: none;
+        }
+        #prog-xf { height: 100%; background: var(--plasma); transform-origin: left; transform: scaleX(0); will-change: transform; }
+        #prog-y {
+            position: fixed; right: 0; top: 0; bottom: 0; width: 2px;
+            z-index: 1001; pointer-events: none; background: var(--steel);
+        }
+        #prog-yf { width: 100%; background: var(--plasma); transform-origin: top; transform: scaleY(0); will-change: transform; }
+
+        /* ══════════════════════════════════════════
+           3D VIEWPORT
+        ══════════════════════════════════════════ */
+        #vp3d {
+            position: fixed; inset: 0; z-index: 10;
+            display: flex; align-items: center; justify-content: center;
+            perspective: 1600px; pointer-events: none;
+        }
+        #stage {
+            position: relative; width: 320px; height: 480px;
+            transform-style: preserve-3d; will-change: transform;
+        }
+        .card3d {
+            position: absolute; inset: 0; border-radius: 16px;
+            overflow: hidden; will-change: transform, opacity, filter;
+            backface-visibility: hidden;
+            border: 1px solid rgba(255,255,255,0.06);
+            transform-style: preserve-3d;
+        }
+        .card3d-inner {
+            position: absolute; inset: 0;
+            background: var(--charcoal);
+        }
+        .card3d img {
+            width: 100%; height: 100%; object-fit: cover;
+            opacity: 0; mix-blend-mode: luminosity;
+            transform: scale(1.08);
+            transition: opacity 0.6s;
+        }
+        .card3d img.loaded { opacity: 0.45; }
+        .card3d-data {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 2rem 1.5rem 1.5rem;
+            background: linear-gradient(transparent, rgba(2,2,2,0.9));
+            display: flex; flex-direction: column; gap: 6px;
+        }
+        .card3d-label {
+            font-family: 'Courier New', monospace;
+            font-size: 9px; letter-spacing: 0.3em;
+            color: var(--plasma); text-transform: uppercase;
+        }
+        .card3d-title {
+            font-size: clamp(1rem, 1.4vw, 1.3rem);
+            font-weight: 900; letter-spacing: -0.02em; line-height: 1.1;
+        }
+        .card3d-refl {
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .card3d-glitch {
+            position: absolute; inset: 0; pointer-events: none; opacity: 0;
+        }
+
+        /* ══════════════════════════════════════════
+           MAIN SECTIONS
+        ══════════════════════════════════════════ */
+        main { position: relative; z-index: 20; pointer-events: none; }
+
+        section {
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; padding: 0 var(--safe);
+            position: relative;
+        }
+
+        .cb { width: 100%; max-width: 1600px; margin: 0 auto; }
+
+        /* SPLIT TEXT */
+        .st-word { display: inline-block; overflow: hidden; vertical-align: bottom; }
+        .st-char { display: inline-block; will-change: transform; }
+
+        .kt {
+            font-size: clamp(3.5rem, 11vw, 14rem);
+            font-weight: 900; line-height: 0.82;
+            letter-spacing: -0.04em;
+            text-transform: uppercase;
+        }
+
+        .sec-tag {
+            font-family: 'Courier New', monospace;
+            font-size: 10px; letter-spacing: 0.3em;
+            color: var(--plasma); margin-bottom: 2.5rem;
+            display: flex; align-items: center; gap: 1.5rem;
+            text-transform: uppercase;
+        }
+        .sec-tag .tl { height: 1px; background: var(--plasma); will-change: transform; transform: scaleX(0); transform-origin: left; }
+        .sec-tag.rev { flex-direction: row-reverse; justify-content: flex-end; }
+        .sec-tag.rev .tl { transform-origin: right; }
+
+        .body-txt {
+            font-size: clamp(0.75rem, 1.1vw, 0.95rem);
+            line-height: 1.65;
+            opacity: 0.5;
+            max-width: 380px;
+            margin-top: 2.5rem;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.02em;
+        }
+
+        .r-align { text-align: right; margin-left: auto; }
+        .r-sec { align-items: flex-end; }
+
+        /* ══════════════════════════════════════════
+           MARQUEE
+        ══════════════════════════════════════════ */
+        .mq-wrap {
+            position: relative; left: calc(-1 * var(--safe)); width: 100vw;
+            overflow: hidden; pointer-events: none;
+            border-top: 1px solid var(--steel);
+            border-bottom: 1px solid var(--steel);
+            padding: 1.8vh 0;
+            background: var(--charcoal);
+            z-index: 25;
+        }
+        .mq-track {
+            display: flex; width: max-content; will-change: transform;
+            font-size: clamp(2.5rem, 6vw, 6rem);
+            font-weight: 900; text-transform: uppercase;
+            letter-spacing: -0.02em; line-height: 1;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(232,228,223,0.18);
+            white-space: nowrap;
+        }
+        .mq-track .mq-item { padding: 0 2.5vw; }
+        .mq-track .mq-solid { color: var(--bone); -webkit-text-stroke: 0; }
+        .mq-track .mq-accent { color: var(--plasma); -webkit-text-stroke: 0; }
+
+        /* ══════════════════════════════════════════
+           STAT GRID
+        ══════════════════════════════════════════ */
+        .stat-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 1px; border: 1px solid var(--steel);
+            margin-top: 3rem; overflow: hidden; border-radius: 4px;
+        }
+        .stat-cell {
+            padding: 2.5rem 2rem; border-right: 1px solid var(--steel);
+            display: flex; flex-direction: column; gap: 0.5rem;
+            background: var(--charcoal); position: relative; overflow: hidden;
+        }
+        .stat-cell:last-child { border-right: none; }
+        .stat-cell::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(204,255,0,0.03), transparent);
+            opacity: 0; transition: opacity 0.4s;
+        }
+        .stat-cell:hover::before { opacity: 1; }
+        .stat-num {
+            font-size: clamp(2.5rem, 5vw, 5rem);
+            font-weight: 900; letter-spacing: -0.04em;
+            color: var(--plasma); line-height: 1;
+        }
+        .stat-label {
+            font-family: 'Courier New', monospace;
+            font-size: 9px; letter-spacing: 0.25em;
+            opacity: 0.4; text-transform: uppercase;
+        }
+        .stat-bar { height: 1px; background: var(--steel); margin-top: 1rem; }
+        .stat-bar-fill { height: 100%; background: var(--plasma); width: 0%; transition: width 1.5s cubic-bezier(0.16,1,0.3,1); }
+
+        /* ══════════════════════════════════════════
+           TERMINAL
+        ══════════════════════════════════════════ */
+        .terminal-wrap {
+            background: var(--charcoal); border: 1px solid var(--steel);
+            border-radius: 8px; overflow: hidden; margin-top: 3rem;
+            font-family: 'Courier New', monospace;
+        }
+        .term-bar {
+            background: var(--steel); padding: 0.8rem 1.5rem;
+            display: flex; align-items: center; gap: 0.8rem;
+        }
+        .term-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .term-dot:nth-child(1) { background: var(--red); }
+        .term-dot:nth-child(2) { background: #FFB800; }
+        .term-dot:nth-child(3) { background: var(--plasma); }
+        .term-title { margin-left: auto; font-size: 9px; letter-spacing: 0.2em; opacity: 0.4; text-transform: uppercase; }
+        .term-body { padding: 2rem 1.5rem; min-height: 220px; }
+        .term-line {
+            font-size: clamp(0.7rem, 1vw, 0.85rem);
+            line-height: 1.8; opacity: 0;
+            white-space: pre-wrap; word-break: break-all;
+        }
+        .term-line .tp { color: var(--plasma); }
+        .term-line .tr { color: var(--red); }
+        .term-line .tb { color: var(--blue); }
+        .term-cursor {
+            display: inline-block; width: 0.55em; height: 0.9em;
+            background: var(--plasma); vertical-align: text-bottom;
+            animation: blink 0.9s step-end infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+        /* ══════════════════════════════════════════
+           PARALLAX ELEMENTS
+        ══════════════════════════════════════════ */
+        .float-glyph {
+            position: absolute; font-size: clamp(8rem, 20vw, 28rem);
+            font-weight: 900; letter-spacing: -0.08em;
+            color: transparent; -webkit-text-stroke: 1px rgba(232,228,223,0.04);
+            pointer-events: none; will-change: transform; user-select: none;
+            line-height: 1;
+        }
+
+        /* ══════════════════════════════════════════
+           MANIFESTO SECTION
+        ══════════════════════════════════════════ */
+        .manifesto-line {
+            font-size: clamp(1.8rem, 4vw, 5rem);
+            font-weight: 900; letter-spacing: -0.03em;
+            line-height: 1.0; overflow: hidden; display: block;
+        }
+        .manifesto-line .inner {
+            display: block; transform: translateY(105%); will-change: transform;
+        }
+        .manifesto-line .dim { color: rgba(232,228,223,0.15); }
+
+        /* ══════════════════════════════════════════
+           CORNER ORNAMENTS
+        ══════════════════════════════════════════ */
+        .corner-tl, .corner-tr, .corner-bl, .corner-br {
+            position: absolute; width: 20px; height: 20px;
+            opacity: 0.3; pointer-events: none;
+        }
+        .corner-tl { top: 12px; left: 12px; border-top: 1px solid var(--plasma); border-left: 1px solid var(--plasma); }
+        .corner-tr { top: 12px; right: 12px; border-top: 1px solid var(--plasma); border-right: 1px solid var(--plasma); }
+        .corner-bl { bottom: 12px; left: 12px; border-bottom: 1px solid var(--plasma); border-left: 1px solid var(--plasma); }
+        .corner-br { bottom: 12px; right: 12px; border-bottom: 1px solid var(--plasma); border-right: 1px solid var(--plasma); }
+
+        /* ══════════════════════════════════════════
+           HOVER CUES
+        ══════════════════════════════════════════ */
+        .mag { pointer-events: auto; display: inline-block; }
+
+        /* Glitch on load */
+        @keyframes g1 { 0%,100%{clip-path:inset(40% 0 60% 0);transform:translate(-4px)}50%{clip-path:inset(10% 0 85% 0);transform:translate(4px)} }
+        @keyframes g2 { 0%,100%{clip-path:inset(70% 0 10% 0);transform:translate(4px)}50%{clip-path:inset(30% 0 50% 0);transform:translate(-4px)} }
+        .glitch-1 { animation: g1 0.12s infinite; color: var(--red); position: absolute; inset: 0; opacity: 0.6; }
+        .glitch-2 { animation: g2 0.18s infinite; color: var(--blue); position: absolute; inset: 0; opacity: 0.6; }
+
+        /* Responsive */
+        @media(max-width:768px) {
+            .stat-grid { grid-template-columns: 1fr; }
+            .stat-cell { border-right: none; border-bottom: 1px solid var(--steel); }
+            #hud-nav { gap: 5vw; }
+            #stage { width: 240px; height: 360px; }
+        }
     </style>
 </head>
 <body>
-    
-    <!-- OVERLAYS & GRIDS -->
-    <div id="arch-grid">
-        <div></div><div></div><div></div><div></div><div></div><div></div>
-        <div></div><div></div><div></div><div></div><div></div><div></div>
+
+<!-- ══ FIXED AMBIENT LAYERS ══ -->
+<canvas id="noise" width="256" height="256"></canvas>
+<div id="arch-grid">
+    <div class="ag-col"></div><div class="ag-col"></div><div class="ag-col"></div><div class="ag-col"></div>
+    <div class="ag-col"></div><div class="ag-col"></div><div class="ag-col"></div><div class="ag-col"></div>
+    <div class="ag-col"></div><div class="ag-col"></div><div class="ag-col"></div><div class="ag-col"></div>
+</div>
+<canvas id="bg-canvas"></canvas>
+<canvas id="gl-canvas"></canvas>
+<div id="glow"></div>
+
+<!-- ══ CURSOR ══ -->
+<div id="cur-ring"><span id="cur-txt"></span></div>
+<div id="cur-dot"></div>
+
+<!-- ══ LOADER ══ -->
+<div id="loader">
+    <div class="ld-scan"></div>
+    <div class="ld-center">
+        <div class="ld-eyebrow">GHOST ARCHITECT // APEX ENGINE</div>
+        <div style="position:relative;">
+            <div class="ld-num" id="ld-n">000</div>
+            <div class="glitch-1 ld-num" id="ld-g1" aria-hidden="true">000</div>
+            <div class="glitch-2 ld-num" id="ld-g2" aria-hidden="true">000</div>
+        </div>
     </div>
-    <div id="grain-layer"></div>
-    <canvas id="bg-canvas"></canvas>
-    <canvas id="particle-canvas"></canvas>
-    <div class="bg-gradient-overlay"></div>
-    <div id="ambient-glow"></div>
+    <div class="ld-bottom">
+        <div class="ld-status" id="ld-s">INITIALIZING KINETICS...</div>
+        <div class="ld-bar-wrap"><div class="ld-bar" id="ld-b"></div></div>
+    </div>
+</div>
 
-    <!-- CURSOR -->
-    <div id="cursor-ring"><span id="cursor-label"></span></div>
-    <div id="cursor-dot"></div>
+<!-- ══ HUD ══ -->
+<div id="hud-logo" class="hud mag" data-label="BNDR">BNDR</div>
+<nav id="hud-nav" class="hud">
+    <span class="nav-item mag" data-label="VIEW">Architecture</span>
+    <span class="nav-item mag" data-label="SEEK">Manifesto</span>
+    <span class="nav-item mag" data-label="RUN">Terminal</span>
+</nav>
+<div id="hud-footer" class="hud">
+    <div class="hud-col">
+        <span class="hud-accent" id="h-sec">SEC_01</span>
+        <span class="hud-dim" id="h-fps">FPS_00</span>
+    </div>
+    <div class="hud-col center">
+        <span>GRID: 12 // SPRING: HELIX // DEPTH: ADAPTIVE</span>
+        <span class="hud-dim" id="h-xy">X:0000 // Y:0000</span>
+    </div>
+    <div class="hud-col right">
+        <span class="mag" id="h-audio" data-label="SOUND">AUDIO_OFF</span>
+        <span class="hud-dim" id="h-time">00:00:00</span>
+    </div>
+</div>
 
-    <!-- LOADER -->
-    <div id="loader">
-        <div class="scan-line"></div>
-        <div class="loader-metrics">
-            <div class="loader-count" id="ld-count">000</div>
-            <div class="loader-status" id="ld-status">INITIALIZING</div>
+<!-- ══ PROGRESS ══ -->
+<div id="prog-x"><div id="prog-xf"></div></div>
+<div id="prog-y"><div id="prog-yf"></div></div>
+
+<!-- ══ 3D STAGE ══ -->
+<div id="vp3d">
+    <div id="stage" class="mag" data-label="EXPLORE"></div>
+</div>
+
+<!-- ══ NARRATIVE ══ -->
+<main>
+
+    <!-- SEC 01 — APEX -->
+    <section id="s1">
+        <div class="float-glyph" style="right:-5vw; top:10vh; opacity:0.6;" data-depth="0.12">01</div>
+        <div class="cb">
+            <div class="sec-tag">
+                <span>01</span>
+                <div class="tl" style="width:50px;"></div>
+                <span>SYSTEM ZERO</span>
+            </div>
+            <h1 class="kt">
+                <span class="st-word">APEX</span><br>
+                <span class="st-word">PREDATOR</span>
+            </h1>
+            <p class="body-txt">
+                Total dominance of the viewport. Zero templates. Engineered through forensic mathematics — every frame, every vector, custom authored.
+            </p>
         </div>
-        <div class="loader-bar-bg"><div class="loader-bar-fill" id="ld-bar"></div></div>
+        <div class="corner-tl"></div><div class="corner-tr"></div>
+        <div class="corner-bl"></div><div class="corner-br"></div>
+    </section>
+
+    <!-- MARQUEE 01 -->
+    <div class="mq-wrap" data-spd="1.4">
+        <div class="mq-track">
+            <span class="mq-item">SYSTEMIC OVERRIDE</span>
+            <span class="mq-item mq-solid">GHOST ARCHITECT</span>
+            <span class="mq-item">NOISE IS SIGNAL</span>
+            <span class="mq-item mq-accent">ZERO TEMPLATES</span>
+            <span class="mq-item">SYSTEMIC OVERRIDE</span>
+            <span class="mq-item mq-solid">GHOST ARCHITECT</span>
+            <span class="mq-item">NOISE IS SIGNAL</span>
+            <span class="mq-item mq-accent">ZERO TEMPLATES</span>
+        </div>
     </div>
 
-    <!-- HUD / NAV -->
-    <div class="hud hud-top-left magnetic-wrap" data-magnetic="link" data-label="HOME">BNDR</div>
-    <nav class="hud hud-top-right">
-        <div class="magnetic-wrap" data-magnetic="link" data-label="VIEW"><a class="nav-link">Architecture</a></div>
-        <div class="magnetic-wrap" data-magnetic="link" data-label="READ"><a class="nav-link">Manifesto</a></div>
-        <div class="magnetic-wrap" data-magnetic="link" data-label="INIT"><a class="nav-link">Terminal</a></div>
-    </nav>
-
-    <!-- FOOTER HUD -->
-    <footer>
-        <div class="footer-col">
-            <span style="color: var(--plasma);" id="hud-sec">SEC_01</span>
-            <span id="hud-fps">FPS_00</span>
-        </div>
-        <div class="footer-col" style="align-items: center;">
-            <div style="display: flex; gap: 20px;">
-                <span>GRID: 12_COL</span>
-                <span>PHYSICS: HELIX_SPRING</span>
+    <!-- SEC 02 — FLUID SUPREMACY -->
+    <section id="s2" class="r-sec">
+        <div class="float-glyph" style="left:-5vw; bottom:5vh;" data-depth="0.08">02</div>
+        <div class="cb">
+            <div class="sec-tag rev">
+                <span>02</span>
+                <div class="tl" style="width:50px;"></div>
+                <span>FLUID SUPREMACY</span>
             </div>
-            <span id="hud-coords" style="opacity: 0.5;">X: 0000 Y: 0000</span>
+            <h2 class="kt r-align">
+                <span class="st-word">FLUID</span><br>
+                <span class="st-word">SUPREMACY</span>
+            </h2>
+            <div class="stat-grid r-align" style="max-width:700px; margin-left:auto; text-align:left;">
+                <div class="stat-cell">
+                    <div class="stat-num" id="st1">0</div>
+                    <div class="stat-label">Render Passes</div>
+                    <div class="stat-bar"><div class="stat-bar-fill" data-w="82"></div></div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-num" id="st2">0</div>
+                    <div class="stat-label">Spring Nodes</div>
+                    <div class="stat-bar"><div class="stat-bar-fill" data-w="65"></div></div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-num" id="st3">0</div>
+                    <div class="stat-label">Active Particles</div>
+                    <div class="stat-bar"><div class="stat-bar-fill" data-w="91"></div></div>
+                </div>
+            </div>
         </div>
-        <div class="footer-col right">
-            <span class="magnetic-wrap" id="audio-toggle" data-magnetic="link" data-label="TOGGLE">AUDIO_OFF</span>
-            <span id="hud-time">00:00:00:00</span>
+    </section>
+
+    <!-- MARQUEE 02 -->
+    <div class="mq-wrap" data-spd="-1.1">
+        <div class="mq-track" style="transform:translateX(-50%)">
+            <span class="mq-item mq-solid">RAW TRIGONOMETRY</span>
+            <span class="mq-item">BENTO DESTROYED</span>
+            <span class="mq-item mq-accent">DEPTH FIELD ACTIVE</span>
+            <span class="mq-item">SCROLL VELOCITY</span>
+            <span class="mq-item mq-solid">RAW TRIGONOMETRY</span>
+            <span class="mq-item">BENTO DESTROYED</span>
+            <span class="mq-item mq-accent">DEPTH FIELD ACTIVE</span>
+            <span class="mq-item">SCROLL VELOCITY</span>
         </div>
-    </footer>
-
-    <!-- PROGRESS -->
-    <div class="progress-bottom"><div class="progress-bottom-fill" id="prog-b"></div></div>
-    <div class="progress-side"><div class="progress-side-fill" id="prog-s"></div></div>
-
-    <!-- 3D KINETIC ENGINE -->
-    <div id="viewport-3d">
-        <div id="carousel-container" class="magnetic-wrap" data-magnetic="card" data-label="⟷"></div>
     </div>
 
-    <!-- NARRATIVE DOM -->
-    <main>
-        <section id="sec-1">
-            <div class="content-block vel-skew">
-                <div class="sec-title left"><span>01</span><div class="line"></div></div>
-                <h1 class="kinetic-text split-text">APEX</h1>
-                <h1 class="kinetic-text split-text">PREDATOR</h1>
-                <p class="font-mono" style="margin-top: 2rem; max-width: 400px; opacity: 0.6; line-height: 1.6;">
-                    Total dominance of the viewport. Zero templates. Engineered to manipulate depth and friction through forensic mathematics.
-                </p>
+    <!-- SEC 03 — KINETIC FRICTION / MANIFESTO -->
+    <section id="s3">
+        <div class="float-glyph" style="right:-4vw; top:15vh;" data-depth="0.15">03</div>
+        <div class="cb">
+            <div class="sec-tag">
+                <span>03</span>
+                <div class="tl" style="width:50px;"></div>
+                <span>MANIFESTO</span>
             </div>
-        </section>
-
-        <div class="marquee-container" data-speed="2">
-            <div class="marquee-track">
-                <span>SYSTEMIC OVERRIDE</span><span class="filled">GHOST ARCHITECT</span><span>NOISE IS SIGNAL</span>
-                <span>SYSTEMIC OVERRIDE</span><span class="filled">GHOST ARCHITECT</span><span>NOISE IS SIGNAL</span>
+            <div id="manifesto-block">
+                <span class="manifesto-line"><span class="inner">KINETIC <span class="dim">FRICTION</span></span></span>
+                <span class="manifesto-line"><span class="inner"><span class="dim">IS</span> THE SIGNAL.</span></span>
+                <span class="manifesto-line"><span class="inner">DESIGN IS <span class="dim">CODE</span>.</span></span>
+                <span class="manifesto-line"><span class="inner"><span class="dim">CODE IS</span> PHYSICS.</span></span>
+                <span class="manifesto-line"><span class="inner">PHYSICS <span class="dim">IS</span> FEELING.</span></span>
             </div>
-        </div>
 
-        <section id="sec-2" style="align-items: flex-end;">
-            <div class="content-block align-right vel-skew">
-                <div class="sec-title right"><div class="line"></div><span>02</span></div>
-                <h2 class="kinetic-text split-text align-right">FLUID</h2>
-                <h2 class="kinetic-text split-text align-right">SUPREMACY</h2>
-            </div>
-        </section>
-
-        <div class="marquee-container" data-speed="-1.5">
-            <div class="marquee-track" style="transform: translateX(-20%);">
-                <span class="filled">RENDERED IN RAW TRIGONOMETRY</span><span>BENTO ARCHITECTURE DESTROYED</span>
-                <span class="filled">RENDERED IN RAW TRIGONOMETRY</span><span>BENTO ARCHITECTURE DESTROYED</span>
+            <div class="terminal-wrap" style="max-width:620px; margin-top:4rem; pointer-events:auto;">
+                <div class="term-bar">
+                    <div class="term-dot"></div><div class="term-dot"></div><div class="term-dot"></div>
+                    <span class="term-title">GHOST_TERMINAL // v2.4.1</span>
+                </div>
+                <div class="term-body" id="term-body">
+                    <div class="term-cursor" id="term-csr"></div>
+                </div>
             </div>
         </div>
+    </section>
 
-        <section id="sec-3" class="pin-section">
-            <div class="content-block vel-skew pin-reveal-wrap">
-                <div class="sec-title left"><span>03</span><div class="line"></div></div>
-                <h2 class="kinetic-text split-text">KINETIC</h2>
-                <h2 class="kinetic-text split-text">FRICTION</h2>
+    <!-- MARQUEE 03 -->
+    <div class="mq-wrap" data-spd="0.9">
+        <div class="mq-track">
+            <span class="mq-item">SPRING TENSION</span>
+            <span class="mq-item mq-solid">HELIX GEOMETRY</span>
+            <span class="mq-item">CHROMATIC ABERRATION</span>
+            <span class="mq-item mq-accent">APEX DOMINANCE</span>
+            <span class="mq-item">SPRING TENSION</span>
+            <span class="mq-item mq-solid">HELIX GEOMETRY</span>
+            <span class="mq-item">CHROMATIC ABERRATION</span>
+            <span class="mq-item mq-accent">APEX DOMINANCE</span>
+        </div>
+    </div>
+
+    <!-- SEC 04 — END STATE -->
+    <section id="s4" class="r-sec" style="padding-bottom:20vh;">
+        <div class="float-glyph" style="left:-5vw; top:10vh;" data-depth="0.1">04</div>
+        <div class="cb r-align">
+            <div class="sec-tag rev">
+                <span>04</span>
+                <div class="tl" style="width:50px;"></div>
+                <span>END STATE</span>
             </div>
-        </section>
+            <h2 class="kt r-align">
+                <span class="st-word">END</span><br>
+                <span class="st-word">STATE</span>
+            </h2>
+            <p class="body-txt r-align" style="margin-left:auto; text-align:right;">
+                No boilerplate. No borrowed motion. Every curve hand-authored. Every particle owned. Every spring tensioned by design intent.
+            </p>
+        </div>
+        <div class="corner-tl"></div><div class="corner-tr"></div>
+        <div class="corner-bl"></div><div class="corner-br"></div>
+    </section>
 
-        <section id="sec-4" class="pin-section" style="padding-bottom: 20vh; align-items: flex-end;">
-            <div class="content-block align-right vel-skew pin-reveal-wrap">
-                <div class="sec-title right"><div class="line"></div><span>04</span></div>
-                <h2 class="kinetic-text split-text align-right">END</h2>
-                <h2 class="kinetic-text split-text align-right">STATE</h2>
-            </div>
-        </section>
-    </main>
+</main>
 
-    <script>
-        // --- ASSETS ---
-        const ASSETS = [
-            'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800', 
-            'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=800',
-            'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=800',
-            'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800',
-            'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=800',
-            'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800'
-        ];
+<script>
+(() => {
+'use strict';
 
-        // --- CORE MATH & UTILS ---
-        const lerp = (start, end, amt) => (1 - amt) * start + amt * end;
-        
-        // Split Text Util
-        const splitText = () => {
-            document.querySelectorAll('.split-text').forEach(el => {
-                const text = el.innerText;
-                el.innerHTML = '';
-                text.split(' ').forEach(word => {
-                    if(!word) return;
-                    const wordDiv = document.createElement('span');
-                    wordDiv.className = 'word';
-                    word.split('').forEach(char => {
-                        const charDiv = document.createElement('span');
-                        charDiv.className = 'char';
-                        charDiv.innerText = char;
-                        wordDiv.appendChild(charDiv);
-                    });
-                    el.appendChild(wordDiv);
-                    el.innerHTML += ' ';
-                });
-            });
+// ══════════════════════════════════════════
+// CONSTANTS & CONFIG
+// ══════════════════════════════════════════
+const CARD_DATA = [
+    { label: 'SYSTEM_01', title: 'Spectral Core', img: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800' },
+    { label: 'SYSTEM_02', title: 'Void Matrix', img: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=800' },
+    { label: 'SYSTEM_03', title: 'Fluid Signal', img: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=800' },
+    { label: 'SYSTEM_04', title: 'Noise Terrain', img: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800' },
+    { label: 'SYSTEM_05', title: 'Apex Mesh', img: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=800' },
+    { label: 'SYSTEM_06', title: 'Ghost Layer', img: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800' }
+];
+
+const TERMINAL_LINES = [
+    { t: 0,    s: '> <tp>BNDR_ENGINE</tp> initializing...', d: 60 },
+    { t: 500,  s: '> Compiling <tb>HELIX_PHYSICS</tb> module... <tp>[OK]</tp>', d: 50 },
+    { t: 1100, s: '> Loading <tb>SPRING_SOLVER</tb> v4.2... <tp>[OK]</tp>', d: 50 },
+    { t: 1700, s: '> <tr>WARNING</tr>: Template remnants detected — purging...', d: 60 },
+    { t: 2400, s: '> Boilerplate eradicated. <tp>[CLEAN]</tp>', d: 40 },
+    { t: 3000, s: '> <tb>DEPTH_OF_FIELD</tb> calibration complete.', d: 50 },
+    { t: 3600, s: '> <tb>CHROMATIC_ABERRATION</tb> engine armed.', d: 50 },
+    { t: 4200, s: '> <tp>STATUS</tp>: All systems nominal. No survivors.', d: 60 },
+    { t: 5000, s: '> Ghost architect online. <tp>███████ 100%</tp>', d: 50 },
+];
+
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
+const map = (v, a, b, c, d) => c + ((v - a) / (b - a)) * (d - c);
+const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+// ══════════════════════════════════════════
+// NOISE CANVAS (FILM GRAIN)
+// ══════════════════════════════════════════
+function buildGrain() {
+    const c = document.getElementById('noise');
+    const ctx = c.getContext('2d');
+    const id = ctx.createImageData(256, 256);
+    const buf = new Uint32Array(id.data.buffer);
+    for (let i = 0; i < buf.length; i++) {
+        const v = Math.random() * 255 | 0;
+        buf[i] = (v << 24) | (v << 16) | (v << 8) | 255;
+    }
+    ctx.putImageData(id, 0, 0);
+    c.style.backgroundImage = `url(${c.toDataURL()})`;
+    c.style.backgroundRepeat = 'repeat';
+    c.style.backgroundSize = '256px 256px';
+    c.width = 1; c.height = 1;
+}
+buildGrain();
+
+// ══════════════════════════════════════════
+// MAIN ENGINE
+// ══════════════════════════════════════════
+class Engine {
+    constructor() {
+        this.scroll = { cur: 0, tgt: 0, vel: 0, max: 1 };
+        this.mouse = { x: innerWidth / 2, y: innerHeight / 2, tx: innerWidth / 2, ty: innerHeight / 2 };
+        this.time = { now: 0, last: performance.now(), delta: 16, frame: 0 };
+        this.ready = false;
+        this.grainOff = 0;
+
+        // Spring physics state per-card
+        this.cards = [];
+        this.cWobble = { x: 0, vx: 0, y: 0, vy: 0, rz: 0, vrz: 0 };
+        this.SPRING_K = 0.072; this.SPRING_D = 0.84;
+
+        // Particles
+        this.ptcls = [];
+        this.HELIX_AMP = 85;
+
+        this.audio = { ctx: null, on: false };
+        this.lastTick = 0;
+
+        // DOM cache
+        this.D = {
+            dot: document.getElementById('cur-dot'),
+            ring: document.getElementById('cur-ring'),
+            txt: document.getElementById('cur-txt'),
+            glow: document.getElementById('glow'),
+            grain: document.getElementById('noise'),
+            bg: document.getElementById('bg-canvas'),
+            gl: document.getElementById('gl-canvas'),
+            stage: document.getElementById('stage'),
+            progX: document.getElementById('prog-xf'),
+            progY: document.getElementById('prog-yf'),
+            hSec: document.getElementById('h-sec'),
+            hFps: document.getElementById('h-fps'),
+            hXY: document.getElementById('h-xy'),
+            hTime: document.getElementById('h-time'),
+            hAudio: document.getElementById('h-audio'),
+            footer: document.getElementById('hud-footer'),
+            logo: document.getElementById('hud-logo'),
+            nav: document.getElementById('hud-nav'),
+            mqs: document.querySelectorAll('.mq-wrap'),
+            glyphs: document.querySelectorAll('.float-glyph'),
         };
 
-        // --- THE ENGINE ---
-        class GhostEngine {
-            constructor() {
-                this.scroll = { current: 0, target: 0, vel: 0, max: 0, limit: 0 };
-                this.mouse = { x: window.innerWidth/2, y: window.innerHeight/2, tX: window.innerWidth/2, tY: window.innerHeight/2 };
-                this.time = { current: 0, last: performance.now(), delta: 0, frames: 0 };
-                this.grainFrames = 0;
-                
-                // Physics Config
-                this.helix = { amplitude: 72, tension: 0.08, friction: 0.85 };
-                this.cards = [];
-                this.containerWobble = { x: 0, y: 0, vX: 0, vY: 0 };
-                
-                // Audio State
-                this.audio = { ctx: null, enabled: false };
+        this._initCanvases();
+        this._initParticles();
+        this._initCards();
+        this._initCursor();
+        this._initAudio();
+        this._initSplitText();
+        this._loader();
+    }
 
-                // Init Sequence
-                splitText();
-                this.initDOM();
-                this.initCanvasGrain();
-                this.initCanvases();
-                this.initCards();
-                this.initCursor();
-                this.initAudio();
-                
-                // Start sequence
-                this.runMechanicalLoader();
+    // ── CANVAS SETUP ──
+    _initCanvases() {
+        const resize = () => {
+            [this.D.bg, this.D.gl].forEach(c => {
+                c.width = innerWidth; c.height = innerHeight;
+            });
+        };
+        window.addEventListener('resize', resize);
+        resize();
+        this.bgCtx = this.D.bg.getContext('2d', { alpha: false });
+        this.glCtx = this.D.gl.getContext('2d');
+    }
+
+    // ── PARTICLES ──
+    _initParticles() {
+        for (let i = 0; i < 60; i++) {
+            this.ptcls.push({
+                x: Math.random() * innerWidth, y: Math.random() * innerHeight,
+                vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+                size: Math.random() * 1.2 + 0.3,
+                opacity: Math.random() * 0.4 + 0.1,
+                hue: Math.random() > 0.92 ? 74 : 0 // occasional plasma
+            });
+        }
+    }
+
+    _drawBG() {
+        const ctx = this.bgCtx;
+        const w = this.D.bg.width, h = this.D.bg.height;
+        const pct = this.scroll.max > 0 ? this.scroll.cur / this.scroll.max : 0;
+
+        // Dynamic background hue
+        const hue = pct * 40;
+        ctx.fillStyle = `hsl(${hue}, 8%, 4%)`;
+        ctx.fillRect(0, 0, w, h);
+
+        // Subtle vignette
+        const radGrad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
+        radGrad.addColorStop(0, 'rgba(0,0,0,0)');
+        radGrad.addColorStop(1, 'rgba(0,0,0,0.6)');
+        ctx.fillStyle = radGrad;
+        ctx.fillRect(0, 0, w, h);
+    }
+
+    _drawParticles() {
+        const ctx = this.glCtx;
+        const w = this.D.gl.width, h = this.D.gl.height;
+        ctx.clearRect(0, 0, w, h);
+
+        const velPush = this.scroll.vel * 0.15;
+        const mx = this.mouse.x, my = this.mouse.y;
+
+        this.ptcls.forEach(p => {
+            p.y -= velPush;
+            p.x += p.vx; p.y += p.vy;
+
+            // Mouse repulsion
+            const dx = mx - p.x, dy = my - p.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < 12000) { const f = (1 - d2 / 12000) * 0.04; p.x -= dx * f; p.y -= dy * f; }
+
+            if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
+            if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+
+            if (p.hue) {
+                ctx.fillStyle = `hsla(${p.hue}, 100%, 55%, ${p.opacity})`;
+            } else {
+                ctx.fillStyle = `rgba(232,228,223,${p.opacity * 0.5})`;
             }
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
 
-            // --- DOM CACHE ---
-            initDOM() {
-                this.dom = {
-                    hudCoords: document.getElementById('hud-coords'),
-                    hudFps: document.getElementById('hud-fps'),
-                    hudSec: document.getElementById('hud-sec'),
-                    hudTime: document.getElementById('hud-time'),
-                    progB: document.getElementById('prog-b'),
-                    progS: document.getElementById('prog-s'),
-                    carousel: document.getElementById('carousel-container'),
-                    skews: document.querySelectorAll('.vel-skew'),
-                    marquees: document.querySelectorAll('.marquee-container')
-                };
-            }
-
-            // --- CANVAS GRAIN (THROTTLED) ---
-            initCanvasGrain() {
-                const offscreen = document.createElement('canvas');
-                offscreen.width = 200; offscreen.height = 200;
-                const ctx = offscreen.getContext('2d');
-                const imgData = ctx.createImageData(200, 200);
-                const buf = new Uint32Array(imgData.data.buffer);
-                for(let i = 0; i < buf.length; i++) buf[i] = (Math.random() * 255) << 24; // Alpha noise
-                ctx.putImageData(imgData, 0, 0);
-                
-                this.grainEl = document.getElementById('grain-layer');
-                this.grainEl.style.backgroundImage = `url(${offscreen.toDataURL()})`;
-            }
-
-            updateGrain() {
-                if(this.grainFrames % 3 === 0) { // Throttle to every 3 RAFs
-                    const x = Math.floor(Math.random() * -10);
-                    const y = Math.floor(Math.random() * -10);
-                    this.grainEl.style.transform = `translate(${x}%, ${y}%)`;
+        // Connecting lines for close pairs
+        ctx.strokeStyle = 'rgba(232,228,223,0.04)';
+        ctx.lineWidth = 0.5;
+        for (let i = 0; i < this.ptcls.length; i++) {
+            for (let j = i + 1; j < this.ptcls.length; j++) {
+                const dx = this.ptcls[i].x - this.ptcls[j].x;
+                const dy = this.ptcls[i].y - this.ptcls[j].y;
+                if (dx * dx + dy * dy < 8000) {
+                    ctx.beginPath();
+                    ctx.moveTo(this.ptcls[i].x, this.ptcls[i].y);
+                    ctx.lineTo(this.ptcls[j].x, this.ptcls[j].y);
+                    ctx.stroke();
                 }
-                this.grainFrames++;
-            }
-
-            // --- BG & PARTICLE CANVASES ---
-            initCanvases() {
-                this.bgCanvas = document.getElementById('bg-canvas');
-                this.bgCtx = this.bgCanvas.getContext('2d', {alpha: false});
-                this.pCanvas = document.getElementById('particle-canvas');
-                this.pCtx = this.pCanvas.getContext('2d');
-                this.particles = [];
-                
-                const resize = () => {
-                    this.bgCanvas.width = this.pCanvas.width = window.innerWidth;
-                    this.bgCanvas.height = this.pCanvas.height = window.innerHeight;
-                };
-                window.addEventListener('resize', resize);
-                resize();
-
-                for(let i=0; i<50; i++) {
-                    this.particles.push({
-                        x: Math.random() * window.innerWidth,
-                        y: Math.random() * window.innerHeight,
-                        vx: (Math.random() - 0.5) * 0.5,
-                        vy: (Math.random() - 0.5) * 0.5,
-                        size: Math.random() * 1.5
-                    });
-                }
-            }
-
-            drawCanvases() {
-                // Background radial breathing / Hue shift based on scroll
-                const hue = (this.scroll.current * 0.05) % 360;
-                this.bgCtx.fillStyle = `hsl(${hue}, 10%, 5%)`;
-                this.bgCtx.fillRect(0, 0, this.bgCanvas.width, this.bgCanvas.height);
-
-                // Particles
-                this.pCtx.clearRect(0, 0, this.pCanvas.width, this.pCanvas.height);
-                this.pCtx.fillStyle = 'rgba(232, 228, 223, 0.4)';
-                
-                const velDistort = this.scroll.vel * 0.1;
-
-                this.particles.forEach(p => {
-                    p.y -= velDistort;
-                    p.x += p.vx; p.y += p.vy;
-                    
-                    // Mouse repel
-                    const dx = this.mouse.x - p.x; const dy = this.mouse.y - p.y;
-                    const dist = Math.sqrt(dx*dx + dy*dy);
-                    if(dist < 100) { p.x -= dx*0.02; p.y -= dy*0.02; }
-
-                    if(p.y < 0) p.y = this.pCanvas.height;
-                    if(p.y > this.pCanvas.height) p.y = 0;
-                    if(p.x < 0) p.x = this.pCanvas.width;
-                    if(p.x > this.pCanvas.width) p.x = 0;
-
-                    this.pCtx.beginPath();
-                    this.pCtx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-                    this.pCtx.fill();
-                });
-            }
-
-            // --- CURSOR & MAGNETICS ---
-            initCursor() {
-                this.cDot = document.getElementById('cursor-dot');
-                this.cRing = document.getElementById('cursor-ring');
-                this.cLabel = document.getElementById('cursor-label');
-                this.glow = document.getElementById('ambient-glow');
-                
-                window.addEventListener('mousemove', e => {
-                    this.mouse.tX = e.clientX;
-                    this.mouse.tY = e.clientY;
-                    // Update CSS vars for background gradient
-                    document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
-                    document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
-                });
-
-                document.querySelectorAll('[data-magnetic]').forEach(el => {
-                    el.addEventListener('mouseenter', (e) => {
-                        document.body.classList.add('cursor-hover');
-                        this.cLabel.innerText = el.getAttribute('data-label');
-                    });
-                    el.addEventListener('mousemove', (e) => {
-                        const rect = el.getBoundingClientRect();
-                        const cx = rect.left + rect.width/2;
-                        const cy = rect.top + rect.height/2;
-                        
-                        // Element pull (link elements gently follow)
-                        if(el.getAttribute('data-magnetic') === 'link') {
-                            gsap.to(el.querySelector('a') || el, {
-                                x: (e.clientX - cx) * 0.3,
-                                y: (e.clientY - cy) * 0.3,
-                                duration: 0.4, ease: "power2.out"
-                            });
-                        }
-                        // Cursor snaps subtly to element
-                        this.mouse.tX = cx + (e.clientX - cx)*0.2;
-                        this.mouse.tY = cy + (e.clientY - cy)*0.2;
-                    });
-                    el.addEventListener('mouseleave', () => {
-                        document.body.classList.remove('cursor-hover');
-                        if(el.getAttribute('data-magnetic') === 'link') {
-                            gsap.to(el.querySelector('a') || el, {
-                                x: 0, y: 0, duration: 0.8, ease: "elastic.out(1, 0.3)"
-                            });
-                        }
-                    });
-                });
-            }
-
-            updateCursor() {
-                // Lerp Ring
-                this.mouse.x = lerp(this.mouse.x, this.mouse.tX, 0.15);
-                this.mouse.y = lerp(this.mouse.y, this.mouse.tY, 0.15);
-                
-                // Batch writes
-                this.cDot.style.transform = `translate(calc(${this.mouse.tX}px - 50%), calc(${this.mouse.tY}px - 50%))`;
-                this.cRing.style.transform = `translate(calc(${this.mouse.x}px - 50%), calc(${this.mouse.y}px - 50%))`;
-                this.glow.style.transform = `translate(${this.mouse.x}px, ${this.mouse.y}px)`;
-            }
-
-            // --- AUDIO SYSTEM ---
-            initAudio() {
-                const toggle = document.getElementById('audio-toggle');
-                toggle.addEventListener('click', () => {
-                    if(!this.audio.ctx) {
-                        const AudioContext = window.AudioContext || window.webkitAudioContext;
-                        this.audio.ctx = new AudioContext();
-                    }
-                    if(this.audio.ctx.state === 'suspended') this.audio.ctx.resume();
-                    this.audio.enabled = !this.audio.enabled;
-                    toggle.innerText = this.audio.enabled ? 'AUDIO_ON' : 'AUDIO_OFF';
-                });
-            }
-
-            playTick(vel) {
-                if(!this.audio.enabled || !this.audio.ctx || vel < 5) return;
-                // Rate limit
-                if(performance.now() - (this.lastTick||0) < 50) return;
-                this.lastTick = performance.now();
-
-                const osc = this.audio.ctx.createOscillator();
-                const gain = this.audio.ctx.createGain();
-                osc.connect(gain); gain.connect(this.audio.ctx.destination);
-                
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(100 + vel*2, this.audio.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(0.01, this.audio.ctx.currentTime + 0.1);
-                
-                const vol = Math.min(0.1, vel/1000);
-                gain.gain.setValueAtTime(vol, this.audio.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, this.audio.ctx.currentTime + 0.05);
-                
-                osc.start(); osc.stop(this.audio.ctx.currentTime + 0.1);
-            }
-
-            // --- MECHANICAL LOADER ---
-            runMechanicalLoader() {
-                let frame = 0;
-                let progress = 0;
-                const countEl = document.getElementById('ld-count');
-                const statusEl = document.getElementById('ld-status');
-                const barEl = document.getElementById('ld-bar');
-                const loaderEl = document.getElementById('loader');
-                
-                const statuses = ['INITIALIZING KINETICS', 'GENERATING HELIX', 'COMPILING SHADERS', 'SYSTEM READY'];
-
-                const loaderLoop = () => {
-                    frame++;
-                    // Discrete frame-count stepping
-                    if(frame % 2 === 0) progress += (Math.random() * 3) + 0.5;
-                    
-                    if(progress >= 100) progress = 100;
-                    
-                    // DOM writes
-                    countEl.innerText = Math.floor(progress).toString().padStart(3, '0');
-                    barEl.style.transform = `scaleX(${progress/100})`;
-                    
-                    // Status rotation
-                    const statusIdx = Math.floor((progress/100) * (statuses.length-1));
-                    statusEl.innerText = statuses[statusIdx];
-
-                    if(progress < 100) {
-                        requestAnimationFrame(loaderLoop);
-                    } else {
-                        setTimeout(() => {
-                            // Exit sequence
-                            gsap.to(loaderEl, {
-                                yPercent: -100, duration: 1.2, ease: "expo.inOut",
-                                onComplete: () => this.initScrollLogic()
-                            });
-                        }, 200);
-                    }
-                };
-                requestAnimationFrame(loaderLoop);
-            }
-
-            // --- SCROLL TIMELINES & GSAP ---
-            initScrollLogic() {
-                gsap.registerPlugin(ScrollTrigger);
-
-                // Reveal initial elements
-                const tl = gsap.timeline();
-                tl.to('footer', { opacity: 1, duration: 1, ease: "power2.out" });
-                tl.to('.nav-link', { opacity: 1, stagger: 0.1, duration: 1 }, "-=0.5");
-                
-                // Character stagger logic (non-uniform)
-                tl.to('#sec-1 .char', {
-                    y: "0%", duration: 1.5, ease: "expo.out",
-                    stagger: (i) => i * 0.04 + (Math.random() * 0.05)
-                }, "-=0.5");
-                tl.to('#sec-1 .sec-title .line', { scaleX: 1, duration: 1, ease: "expo.out" }, "-=1");
-
-                // Scroll bindings
-                window.addEventListener('scroll', () => {
-                    this.scroll.target = window.scrollY;
-                    this.scroll.max = document.body.scrollHeight - window.innerHeight;
-                });
-                // Recalculate max on resize
-                window.addEventListener('resize', () => this.scroll.max = document.body.scrollHeight - window.innerHeight);
-                this.scroll.max = document.body.scrollHeight - window.innerHeight;
-
-                // Section pinning & reveals
-                const pins = ['#sec-3', '#sec-4'];
-                pins.forEach((secId, index) => {
-                    ScrollTrigger.create({
-                        trigger: secId,
-                        start: "top top",
-                        end: "+=100%",
-                        pin: true,
-                        pinSpacing: true
-                    });
-
-                    // Clip-path reveal for wrapper
-                    gsap.to(`${secId} .pin-reveal-wrap`, {
-                        clipPath: "inset(0% 0% 0% 0%)",
-                        duration: 1.5, ease: "power3.inOut",
-                        scrollTrigger: {
-                            trigger: secId, start: "top 70%", toggleActions: "play none none reverse", immediateRender: false
-                        }
-                    });
-
-                    // Child text stagger
-                    gsap.to(`${secId} .char`, {
-                        y: "0%", duration: 1.2, ease: "expo.out",
-                        stagger: (i) => i * 0.03 + (Math.random() * 0.02),
-                        scrollTrigger: { trigger: secId, start: "top 50%", toggleActions: "play none none reverse", immediateRender: false }
-                    });
-                    
-                    gsap.to(`${secId} .sec-title .line`, {
-                        scaleX: 1, duration: 1, ease: "expo.out",
-                        scrollTrigger: { trigger: secId, start: "top 50%", toggleActions: "play none none reverse", immediateRender: false }
-                    });
-                });
-
-                // Start Master Loop
-                this.time.last = performance.now();
-                requestAnimationFrame((t) => this.renderLoop(t));
-            }
-
-            // --- 3D HELIX CAROUSEL ---
-            initCards() {
-                ASSETS.forEach((src, i) => {
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.innerHTML = `<img src="${src}" alt="img">`;
-                    this.dom.carousel.appendChild(card);
-                    
-                    this.cards.push({
-                        el: card,
-                        img: card.querySelector('img'),
-                        // State for spring physics
-                        y: 0, vY: 0,
-                        z: 0, vZ: 0,
-                        rY: 0, vRy: 0
-                    });
-                });
-            }
-
-            updateCarousel() {
-                const progress = this.scroll.max > 0 ? this.scroll.current / this.scroll.max : 0;
-                const totalRotations = 4;
-                const rotationOffset = progress * Math.PI * 2 * totalRotations;
-                
-                const radius = window.innerWidth < 768 ? 200 : 350;
-                const step = (Math.PI * 2) / this.cards.length;
-
-                // Container Wobble Physics (Velocity driven)
-                this.containerWobble.vX += (this.scroll.vel * 0.02 - this.containerWobble.x) * this.helix.tension;
-                this.containerWobble.vX *= this.helix.friction;
-                this.containerWobble.x += this.containerWobble.vX;
-
-                const tiltX = (this.mouse.y / window.innerHeight - 0.5) * -15;
-                const tiltY = (this.mouse.x / window.innerWidth - 0.5) * 15;
-                
-                // Tilt-on-scroll + Wobble
-                this.dom.carousel.style.transform = `rotateX(${tiltX + this.containerWobble.x}deg) rotateY(${tiltY}deg) rotateZ(${this.scroll.vel * -0.05}deg)`;
-
-                // Map cards
-                let maxZ = -Infinity;
-                let activeIdx = 0;
-
-                // Physics target calcs
-                this.cards.forEach((card, i) => {
-                    const angle = rotationOffset + (i * step);
-                    const tX = Math.sin(angle) * radius;
-                    const tZ = Math.cos(angle) * radius;
-                    // Helix Amplitude calculation
-                    const tY = Math.sin(angle * 2) * this.helix.amplitude - (progress * 150);
-                    const tRy = angle * (180 / Math.PI);
-
-                    // Spring Application
-                    card.vY += (tY - card.y) * this.helix.tension; card.vY *= this.helix.friction; card.y += card.vY;
-                    card.vZ += (tZ - card.z) * this.helix.tension; card.vZ *= this.helix.friction; card.z += card.vZ;
-                    card.vRy += (tRy - card.rY) * this.helix.tension; card.vRy *= this.helix.friction; card.rY += card.vRy;
-
-                    if(card.z > maxZ) { maxZ = card.z; activeIdx = i; }
-                });
-
-                // Apply DOM / Filters
-                this.cards.forEach((card, i) => {
-                    const zNorm = (card.z + radius) / (radius * 2); // 0 to 1
-                    
-                    // Depth of field logic: Max 3 visible
-                    const distFromActive = Math.abs(i - activeIdx);
-                    // Circular distance calculation
-                    const minD = Math.min(distFromActive, this.cards.length - distFromActive);
-                    
-                    let blur = 0;
-                    let opacity = 0;
-                    let scale = 0.5 + (zNorm * 0.5);
-
-                    if(minD === 0) { // Active
-                        blur = 0; opacity = 1; scale = 1;
-                        card.el.style.zIndex = 1000;
-                        // Chromatic Aberration based on velocity
-                        const caInt = Math.abs(this.scroll.vel) * 0.1;
-                        card.el.style.setProperty('--ca-x', `${caInt}px`);
-                        card.el.classList.add('active-ca');
-                    } else if (minD === 1 || minD === 2) {
-                        blur = minD * 8; opacity = 0.6 - (minD*0.2);
-                        card.el.style.zIndex = 900 - minD;
-                        card.el.classList.remove('active-ca');
-                    } else {
-                        opacity = 0; // Hide others
-                    }
-
-                    // Batch DOM Writes
-                    card.el.style.transform = `translate3d(${Math.sin(card.rY * Math.PI/180)*radius}px, ${card.y}px, ${card.z}px) rotateY(${card.rY}deg) scale(${scale})`;
-                    card.el.style.filter = `blur(${blur}px)`;
-                    card.el.style.opacity = opacity;
-                    
-                    // Style injection for CA (pseudo elements handled via CSS class toggle and vars if needed, but direct text-shadow/box-shadow via JS is cleaner for dynamic)
-                    if(minD === 0) {
-                        const v = this.scroll.vel;
-                        const rx = Math.max(-10, Math.min(10, v * 0.2));
-                        const cx = Math.max(-10, Math.min(10, v * -0.2));
-                        card.el.style.boxShadow = `0 30px 60px rgba(0,0,0,0.8), ${rx}px 0 10px rgba(255,0,0,0.3), ${cx}px 0 10px rgba(0,255,255,0.3)`;
-                    } else {
-                        card.el.style.boxShadow = `0 30px 60px rgba(0,0,0,0.8)`;
-                    }
-                });
-            }
-
-            // --- MASTER LOOP ---
-            renderLoop(time) {
-                // FPS Calc
-                this.time.delta = time - this.time.last;
-                this.time.last = time;
-                this.time.frames++;
-                
-                // Lerp Smooth Scroll (Lenis Equivalent)
-                const lastScroll = this.scroll.current;
-                this.scroll.current += (this.scroll.target - this.scroll.current) * 0.08;
-                this.scroll.vel = this.scroll.current - lastScroll;
-
-                // Update Systems Phase (Batch Reads/Logic)
-                const pct = this.scroll.max > 0 ? this.scroll.current / this.scroll.max : 0;
-                const absVel = Math.abs(this.scroll.vel);
-                const skew = Math.max(-15, Math.min(15, this.scroll.vel * 0.1));
-                
-                // Section Indexing Logic
-                let currentSec = 1;
-                const secHeight = this.scroll.max / 3; // roughly 4 sections
-                if(this.scroll.current > secHeight*0.5) currentSec = 2;
-                if(this.scroll.current > secHeight*1.5) currentSec = 3;
-                if(this.scroll.current > secHeight*2.5) currentSec = 4;
-
-                this.updateCarousel();
-                
-                // Update Marquees (Hybrid JS transform based on scroll)
-                this.dom.marquees.forEach(m => {
-                    const speed = parseFloat(m.getAttribute('data-speed'));
-                    const track = m.querySelector('.marquee-track');
-                    // Continuous loop offset based on absolute scroll position
-                    track.style.transform = `translateX(${-(this.scroll.current * speed * 0.1) % 50}%)`;
-                });
-
-                // Batch DOM Writes Phase
-                this.updateCursor();
-                this.updateGrain();
-                this.drawCanvases();
-                this.playTick(absVel);
-
-                // HUD Writes
-                if(this.time.frames % 10 === 0) { // Throttle text updates
-                    this.dom.hudFps.innerText = `FPS_${Math.round(1000/this.time.delta)}`;
-                    this.dom.hudCoords.innerText = `X: ${Math.round(this.mouse.x).toString().padStart(4,'0')} Y: ${Math.round(this.mouse.y).toString().padStart(4,'0')}`;
-                    const d = new Date();
-                    this.dom.hudTime.innerText = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}:${Math.floor(d.getMilliseconds()/10).toString().padStart(2,'0')}`;
-                    this.dom.hudSec.innerText = `SEC_0${currentSec}`;
-                }
-
-                // Progress Bars
-                this.dom.progB.style.transform = `scaleX(${pct})`;
-                this.dom.progS.style.transform = `scaleY(${pct})`;
-
-                // Velocity Skews
-                this.dom.skews.forEach(el => el.style.transform = `skewY(${skew}deg)`);
-
-                requestAnimationFrame((t) => this.renderLoop(t));
             }
         }
+    }
 
-        // Ignition
-        window.onload = () => new GhostEngine();
-    </script>
+    // ── CARDS ──
+    _initCards() {
+        const stage = this.D.stage;
+        CARD_DATA.forEach((data, i) => {
+            const el = document.createElement('div');
+            el.className = 'card3d';
+
+            const img = document.createElement('img');
+            img.src = data.img;
+            img.onload = () => img.classList.add('loaded');
+            img.onerror = () => {}; // graceful
+
+            el.innerHTML = `<div class="card3d-inner"></div>`;
+            el.querySelector('.card3d-inner').appendChild(img);
+            el.innerHTML += `
+                <div class="card3d-data">
+                    <div class="card3d-label">${data.label}</div>
+                    <div class="card3d-title">${data.title}</div>
+                </div>
+                <div class="card3d-refl"></div>`;
+            el.appendChild(img); // move img to top level
+            stage.appendChild(el);
+
+            this.cards.push({
+                el, img,
+                y: 0, vy: 0,
+                z: 0, vz: 0,
+                ry: 0, vry: 0,
+                scale: 1, vscale: 0
+            });
+        });
+
+        // Fix: append children correctly
+        stage.innerHTML = '';
+        CARD_DATA.forEach((data, i) => {
+            const el = document.createElement('div');
+            el.className = 'card3d';
+            el.innerHTML = `
+                <div class="card3d-inner">
+                    <img src="${data.img}" alt="${data.title}" loading="lazy">
+                </div>
+                <div class="card3d-data">
+                    <div class="card3d-label">${data.label}</div>
+                    <div class="card3d-title">${data.title}</div>
+                </div>
+                <div class="card3d-refl"></div>`;
+            const img = el.querySelector('img');
+            img.onload = () => img.classList.add('loaded');
+            stage.appendChild(el);
+            this.cards[i] = { el, img, y: 0, vy: 0, z: 0, vz: 0, ry: 0, vry: 0, scale: 0.5, vscale: 0 };
+        });
+    }
+
+    _updateCards() {
+        const pct = this.scroll.max > 0 ? this.scroll.cur / this.scroll.max : 0;
+        const N = this.cards.length;
+        const step = (Math.PI * 2) / N;
+        const rotOff = pct * Math.PI * 2 * 3.5;
+        const radius = clamp(innerWidth * 0.22, 180, 380);
+
+        // Container wobble (velocity driven)
+        const velTgt = this.scroll.vel * 0.3;
+        this.cWobble.vx += (velTgt - this.cWobble.x) * this.SPRING_K;
+        this.cWobble.vx *= this.SPRING_D;
+        this.cWobble.x += this.cWobble.vx;
+
+        const tiltX = (this.mouse.y / innerHeight - 0.5) * -18;
+        const tiltY = (this.mouse.x / innerWidth - 0.5) * 18;
+        const velRZ = clamp(this.scroll.vel * -0.06, -8, 8);
+
+        this.D.stage.style.transform = `rotateX(${tiltX + this.cWobble.x * 0.5}deg) rotateY(${tiltY}deg) rotateZ(${velRZ}deg)`;
+
+        let maxZ = -Infinity, activeIdx = 0;
+        this.cards.forEach((c, i) => {
+            const angle = rotOff + i * step;
+            const tZ = Math.cos(angle) * radius;
+            if (tZ > maxZ) { maxZ = tZ; activeIdx = i; }
+        });
+
+        this.cards.forEach((c, i) => {
+            const angle = rotOff + i * step;
+            const tX = Math.sin(angle) * radius;
+            const tZ = Math.cos(angle) * radius;
+            const tY = Math.sin(angle * 2 + pct * Math.PI) * this.HELIX_AMP;
+            const tRY = angle * (180 / Math.PI);
+
+            const K = this.SPRING_K, D = this.SPRING_D;
+            c.vy += (tY - c.y) * K; c.vy *= D; c.y += c.vy;
+            c.vz += (tZ - c.z) * K; c.vz *= D; c.z += c.vz;
+            c.vry += (tRY - c.ry) * K * 0.7; c.vry *= D; c.ry += c.vry;
+
+            const circDist = Math.min(Math.abs(i - activeIdx), N - Math.abs(i - activeIdx));
+            const zNorm = (c.z + radius) / (radius * 2);
+            const tScale = circDist === 0 ? 1 : 0.6 - circDist * 0.12;
+            c.vscale += (tScale - c.scale) * K; c.vscale *= D; c.scale += c.vscale;
+
+            let blur = 0, opacity = 0;
+            if (circDist === 0) { blur = 0; opacity = 1; }
+            else if (circDist === 1) { blur = 6; opacity = 0.55; }
+            else if (circDist === 2) { blur = 14; opacity = 0.25; }
+            else { opacity = 0; }
+
+            // Chromatic aberration via box-shadow on active
+            let shadow = `0 40px 80px rgba(0,0,0,0.9)`;
+            if (circDist === 0) {
+                const av = Math.abs(this.scroll.vel);
+                const ca = clamp(av * 0.5, 0, 14);
+                shadow += `, ${ca}px 0 20px rgba(255,45,85,0.4), ${-ca}px 0 20px rgba(0,245,255,0.4)`;
+            }
+
+            c.el.style.transform = `translate3d(${tX}px, ${c.y}px, ${c.z}px) rotateY(${c.ry}deg) scale(${c.scale})`;
+            c.el.style.filter = `blur(${blur}px)`;
+            c.el.style.opacity = opacity;
+            c.el.style.zIndex = Math.round(zNorm * 100);
+            c.el.style.boxShadow = shadow;
+        });
+    }
+
+    // ── CURSOR ──
+    _initCursor() {
+        window.addEventListener('mousemove', e => {
+            this.mouse.tx = e.clientX;
+            this.mouse.ty = e.clientY;
+        });
+        window.addEventListener('mousedown', () => document.body.classList.add('c-click'));
+        window.addEventListener('mouseup', () => document.body.classList.remove('c-click'));
+
+        document.querySelectorAll('.mag, [data-label]').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                document.body.classList.add('c-hover');
+                this.D.txt.innerText = el.dataset.label || '';
+            });
+            el.addEventListener('mousemove', e => {
+                if (el.dataset.label === 'EXPLORE') return;
+                const r = el.getBoundingClientRect();
+                const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+                const dx = (e.clientX - cx) * 0.28, dy = (e.clientY - cy) * 0.28;
+                this.mouse.tx = cx + dx; this.mouse.ty = cy + dy;
+                el.style.transform = `translate(${dx}px, ${dy}px)`;
+            });
+            el.addEventListener('mouseleave', () => {
+                document.body.classList.remove('c-hover');
+                if (el.style.transform) {
+                    el.style.transition = 'transform 0.8s cubic-bezier(0.34,1.56,0.64,1)';
+                    el.style.transform = '';
+                    setTimeout(() => el.style.transition = '', 800);
+                }
+            });
+        });
+    }
+
+    _updateCursor() {
+        this.mouse.x = lerp(this.mouse.x, this.mouse.tx, 0.14);
+        this.mouse.y = lerp(this.mouse.y, this.mouse.ty, 0.14);
+        this.D.dot.style.transform = `translate(calc(${this.mouse.tx}px - 50%), calc(${this.mouse.ty}px - 50%))`;
+        this.D.ring.style.transform = `translate(calc(${this.mouse.x}px - 50%), calc(${this.mouse.y}px - 50%))`;
+        this.D.glow.style.transform = `translate(${this.mouse.x - 350}px, ${this.mouse.y - 350}px)`;
+    }
+
+    // ── AUDIO ──
+    _initAudio() {
+        this.D.hAudio.addEventListener('click', () => {
+            if (!this.audio.ctx) {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                this.audio.ctx = new AC();
+            }
+            if (this.audio.ctx.state === 'suspended') this.audio.ctx.resume();
+            this.audio.on = !this.audio.on;
+            this.D.hAudio.innerText = this.audio.on ? 'AUDIO_ON' : 'AUDIO_OFF';
+            this.D.hAudio.style.color = this.audio.on ? 'var(--plasma)' : '';
+        });
+    }
+
+    _tick(vel) {
+        if (!this.audio.on || !this.audio.ctx || Math.abs(vel) < 3) return;
+        const now = performance.now();
+        if (now - this.lastTick < 60) return;
+        this.lastTick = now;
+
+        const ctx = this.audio.ctx;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass'; filter.frequency.value = 200 + Math.abs(vel) * 3;
+        osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(80 + Math.abs(vel) * 2, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(20, ctx.currentTime + 0.12);
+        const v = clamp(Math.abs(vel) / 400, 0.001, 0.08);
+        gain.gain.setValueAtTime(v, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+        osc.start(); osc.stop(ctx.currentTime + 0.12);
+    }
+
+    // ── SPLIT TEXT ──
+    _initSplitText() {
+        document.querySelectorAll('.st-word').forEach(el => {
+            const txt = el.innerText;
+            el.innerHTML = '';
+            txt.split('').forEach(ch => {
+                const span = document.createElement('span');
+                span.className = 'st-char';
+                span.innerText = ch;
+                span.style.transform = 'translateY(110%)';
+                el.appendChild(span);
+            });
+        });
+    }
+
+    // ── LOADER ──
+    _loader() {
+        let prog = 0, frame = 0;
+        const nEl = document.getElementById('ld-n');
+        const g1 = document.getElementById('ld-g1');
+        const g2 = document.getElementById('ld-g2');
+        const sEl = document.getElementById('ld-s');
+        const bEl = document.getElementById('ld-b');
+        const statuses = ['INITIALIZING KINETICS...', 'COMPILING HELIX GEOMETRY...', 'SPRING SOLVER ACTIVE...', 'CHROMATIC ENGINE ARMED...', 'SYSTEM NOMINAL. ZERO SURVIVORS.'];
+
+        const loop = () => {
+            frame++;
+            // Non-linear progress curve
+            const inc = frame < 40 ? Math.random() * 4 + 1 : Math.random() * 1.5 + 0.3;
+            prog = Math.min(100, prog + inc);
+
+            const numStr = Math.floor(prog).toString().padStart(3, '0');
+            nEl.innerText = numStr;
+            // Glitch twins with offset
+            if (Math.random() > 0.7) { g1.innerText = numStr; g2.innerText = numStr; }
+
+            bEl.style.transform = `scaleX(${prog / 100})`;
+            sEl.innerText = statuses[Math.floor((prog / 100) * (statuses.length - 1))];
+
+            if (prog < 100) {
+                requestAnimationFrame(loop);
+            } else {
+                setTimeout(() => this._exitLoader(), 300);
+            }
+        };
+        requestAnimationFrame(loop);
+    }
+
+    _exitLoader() {
+        const loader = document.getElementById('loader');
+        gsap.registerPlugin(ScrollTrigger);
+
+        gsap.to(loader, {
+            yPercent: -100, duration: 1.3, ease: 'expo.inOut',
+            onComplete: () => {
+                loader.style.display = 'none';
+                this._afterLoad();
+            }
+        });
+    }
+
+    _afterLoad() {
+        this.ready = true;
+
+        // Scroll setup
+        window.addEventListener('scroll', () => {
+            this.scroll.tgt = window.scrollY;
+            this.scroll.max = document.body.scrollHeight - innerHeight;
+        });
+        window.addEventListener('resize', () => {
+            this.scroll.max = document.body.scrollHeight - innerHeight;
+        });
+        this.scroll.max = document.body.scrollHeight - innerHeight;
+
+        // Arch grid fade in
+        gsap.to('#arch-grid', { opacity: 1, duration: 2, ease: 'power2.out' });
+
+        // Nav + Logo reveal
+        gsap.fromTo('#hud-logo', { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' });
+        gsap.fromTo('#hud-nav', { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.8, delay: 0.15, ease: 'power3.out' });
+        gsap.to('#hud-footer', { opacity: 1, duration: 0.8, delay: 0.3, ease: 'power2.out' });
+
+        // Hero chars
+        gsap.to('#s1 .st-char', {
+            y: '0%', duration: 1.6, ease: 'expo.out',
+            stagger: i => i * 0.045 + Math.random() * 0.03,
+            delay: 0.2
+        });
+        gsap.to('#s1 .sec-tag .tl', { scaleX: 1, duration: 1.2, ease: 'expo.out', delay: 0.6 });
+        gsap.fromTo('#s1 .body-txt', { opacity: 0, y: 20 }, { opacity: 0.5, y: 0, duration: 1, delay: 0.8, ease: 'power3.out' });
+
+        // GSAP ScrollTrigger for each section
+        ['#s2', '#s3', '#s4'].forEach((sel, idx) => {
+            gsap.to(`${sel} .st-char`, {
+                y: '0%', duration: 1.4, ease: 'expo.out',
+                stagger: i => i * 0.04 + Math.random() * 0.025,
+                scrollTrigger: { trigger: sel, start: 'top 65%', toggleActions: 'play none none reverse' }
+            });
+            gsap.to(`${sel} .sec-tag .tl`, {
+                scaleX: 1, duration: 1, ease: 'expo.out',
+                scrollTrigger: { trigger: sel, start: 'top 65%', toggleActions: 'play none none reverse' }
+            });
+        });
+
+        // Manifesto lines
+        document.querySelectorAll('.manifesto-line .inner').forEach((el, i) => {
+            gsap.to(el, {
+                y: '0%', duration: 1.2, ease: 'expo.out', delay: i * 0.08,
+                scrollTrigger: { trigger: el, start: 'top 80%', toggleActions: 'play none none reverse' }
+            });
+        });
+
+        // Stat counters
+        const targets = [{ el: '#st1', val: 6 }, { el: '#st2', val: 48 }, { el: '#st3', val: 60 }];
+        targets.forEach(({ el, val }) => {
+            ScrollTrigger.create({
+                trigger: '#s2', start: 'top 60%',
+                onEnter: () => {
+                    let cur = 0;
+                    const step = () => {
+                        cur = Math.min(val, cur + Math.ceil(val / 30));
+                        document.querySelector(el).innerText = cur;
+                        if (cur < val) requestAnimationFrame(step);
+                    };
+                    step();
+                    document.querySelectorAll('#s2 .stat-bar-fill').forEach(b => {
+                        b.style.width = b.dataset.w + '%';
+                    });
+                }
+            });
+        });
+
+        // Float glyphs parallax via CSS
+        this.D.glyphs.forEach(g => { g.style.transition = 'none'; });
+
+        // Terminal typewriter
+        ScrollTrigger.create({
+            trigger: '#s3', start: 'top 50%',
+            onEnter: () => this._runTerminal()
+        });
+
+        // Body text
+        gsap.fromTo('#s2 .body-txt, #s3 .body-txt, #s4 .body-txt',
+            { opacity: 0, y: 20 }, {
+                opacity: 0.5, y: 0, duration: 1,
+                stagger: 0.2,
+                scrollTrigger: { trigger: '#s2', start: 'top 60%', toggleActions: 'play none none none' }
+            });
+
+        // Start RAF loop
+        this.time.last = performance.now();
+        requestAnimationFrame(t => this._loop(t));
+    }
+
+    _runTerminal() {
+        const body = document.getElementById('term-body');
+        const csr = document.getElementById('term-csr');
+        body.innerHTML = '';
+        body.appendChild(csr);
+
+        TERMINAL_LINES.forEach(({ t, s, d }) => {
+            setTimeout(() => {
+                const line = document.createElement('div');
+                line.className = 'term-line';
+                line.innerHTML = s.replace(/<tp>/g, '<span class="tp">').replace(/<\/tp>/g, '</span>')
+                    .replace(/<tr>/g, '<span class="tr">').replace(/<\/tr>/g, '</span>')
+                    .replace(/<tb>/g, '<span class="tb">').replace(/<\/tb>/g, '</span>');
+                body.insertBefore(line, csr);
+                // typewrite effect
+                line.style.opacity = '1';
+                body.scrollTop = body.scrollHeight;
+            }, t);
+        });
+    }
+
+    // ── GRAIN ANIMATE ──
+    _animGrain() {
+        if (this.time.frame % 3 === 0) {
+            const x = Math.random() * -10, y = Math.random() * -10;
+            this.D.grain.style.transform = `translate(${x}%, ${y}%)`;
+        }
+    }
+
+    // ── MARQUEES ──
+    _updateMarquees() {
+        this.D.mqs.forEach(mq => {
+            const spd = parseFloat(mq.dataset.spd);
+            const track = mq.querySelector('.mq-track');
+            const off = -(this.scroll.cur * spd * 0.06) % 50;
+            track.style.transform = `translateX(${off}%)`;
+        });
+    }
+
+    // ── FLOAT GLYPHS PARALLAX ──
+    _updateGlyphs() {
+        this.D.glyphs.forEach(g => {
+            const depth = parseFloat(g.dataset.depth) || 0.1;
+            const rect = g.getBoundingClientRect();
+            const vy = (this.scroll.cur - (g._lastScroll || 0)) * depth;
+            g._lastScroll = this.scroll.cur;
+            g._yOff = (g._yOff || 0) + vy;
+            const mx = (this.mouse.x / innerWidth - 0.5) * depth * 40;
+            const my = (this.mouse.y / innerHeight - 0.5) * depth * 40;
+            g.style.transform = `translate(${mx}px, ${my}px)`;
+        });
+    }
+
+    // ── SKEW ──
+    _updateSkew() {
+        const skew = clamp(this.scroll.vel * 0.08, -12, 12);
+        document.querySelectorAll('.cb').forEach(el => {
+            el.style.transform = `skewY(${skew}deg)`;
+        });
+    }
+
+    // ── HUD ──
+    _updateHUD() {
+        if (this.time.frame % 8 !== 0) return;
+        const fps = Math.round(1000 / this.time.delta);
+        this.D.hFps.innerText = `FPS_${fps.toString().padStart(2, '0')}`;
+        this.D.hXY.innerText = `X:${Math.round(this.mouse.x).toString().padStart(4, '0')} // Y:${Math.round(this.mouse.y).toString().padStart(4, '0')}`;
+        const d = new Date();
+        this.D.hTime.innerText = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}`;
+
+        const pct = this.scroll.max > 0 ? this.scroll.cur / this.scroll.max : 0;
+        let sec = 1;
+        if (pct > 0.22) sec = 2;
+        if (pct > 0.48) sec = 3;
+        if (pct > 0.74) sec = 4;
+        this.D.hSec.innerText = `SEC_0${sec}`;
+
+        this.D.progX.style.transform = `scaleX(${pct})`;
+        this.D.progY.style.transform = `scaleY(${pct})`;
+    }
+
+    // ── MASTER LOOP ──
+    _loop(now) {
+        this.time.delta = clamp(now - this.time.last, 1, 50);
+        this.time.last = now;
+        this.time.frame++;
+
+        // Lerp scroll
+        const prev = this.scroll.cur;
+        this.scroll.cur = lerp(this.scroll.cur, this.scroll.tgt, 0.075);
+        this.scroll.vel = this.scroll.cur - prev;
+
+        this._drawBG();
+        this._drawParticles();
+        this._animGrain();
+        this._updateCursor();
+        this._updateMarquees();
+        this._updateGlyphs();
+        this._updateSkew();
+        this._updateCards();
+        this._updateHUD();
+        this._tick(this.scroll.vel);
+
+        requestAnimationFrame(t => this._loop(t));
+    }
+}
+
+// Ignition
+window.addEventListener('load', () => new Engine());
+})();
+</script>
 </body>
 </html>
