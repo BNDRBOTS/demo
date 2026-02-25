@@ -3,261 +3,515 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BNDR // KINETIC_OPS</title>
+    <title>BNDR // GHOST_ARCHITECT_EDITION</title>
     
-    <!-- External Logic: High-Performance Only -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Fat, Rounded, Kinetic -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            /* THE BNDR PALETTE: BONE, VOID, STEEL */
-            --void: #060606;
-            --charcoal: #0C0D0D;
-            --creme: #FDFBF7;
-            --creme-muted: #A5A8AC;
-            --creme-glow: rgba(253, 251, 247, 0.45);
-            --steel: #4A4D50;
+            /* THE GHOST PALETTE */
+            --void: #030304;
+            --charcoal: #0B0C0E;
+            --bone: #EAE6DF;
+            --steel: #2A2B2E;
+            --plasma: #D4FF00; /* Electric Accent */
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(234, 230, 223, 0.08);
             
-            /* TYPOGRAPHY LAW */
-            --font-display: 'Syne', sans-serif;
-            --font-ui: 'Inter', sans-serif;
+            /* TYPOGRAPHY */
+            --font-display: 'Outfit', sans-serif;
+            --font-hud: 'Space Mono', monospace;
             
-            /* GRID & DYNAMICS */
-            --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
-            --safe-area: max(40px, env(safe-area-inset-left));
+            /* DYNAMICS */
+            --safe-area: max(5vw, env(safe-area-inset-left));
+            --radius-max: 40px;
+            --radius-sm: 12px;
         }
 
-        /* HARDWARE RESET */
-        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+        /* --- HARDWARE RESET --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; cursor: none !important; }
+        
         body {
             background: var(--void);
-            color: var(--creme);
-            font-family: var(--font-ui);
+            color: var(--bone);
+            font-family: var(--font-display);
             overscroll-behavior: none;
-            height: 700vh; /* Extended timeline */
+            height: 800vh; /* Deep Scroll */
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
+            font-size: 16px;
         }
 
-        @media (pointer: fine) { * { cursor: none !important; } }
+        ::-webkit-scrollbar { display: none; }
 
         /* --- ATMOSPHERIC LAYERS --- */
         #grain-layer {
-            position: fixed; inset: 0; z-index: 9999;
-            pointer-events: none; opacity: 0.05;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            position: fixed; inset: -100%; z-index: 9999;
+            pointer-events: none; opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            animation: grainNoise 8s steps(10) infinite;
+            mix-blend-mode: overlay;
+        }
+        @keyframes grainNoise {
+            0%, 100% { transform: translate(0, 0); }
+            10% { transform: translate(-5%, -10%); }
+            30% { transform: translate(5%, -15%); }
+            50% { transform: translate(-10%, 5%); }
+            70% { transform: translate(10%, 10%); }
+            90% { transform: translate(-5%, 5%); }
         }
 
         #bg-canvas {
             position: fixed; inset: 0; z-index: 0;
-            background: radial-gradient(circle at 50% 50%, #111 0%, var(--void) 100%);
+            pointer-events: none;
         }
 
-        /* --- HARDWARE CURSOR --- */
-        #cursor {
-            position: fixed; top: 0; left: 0; width: 6px; height: 6px;
-            background: var(--creme); border-radius: 50%;
+        /* --- OPTICAL TRACKING (CURSOR) --- */
+        #cursor-dot {
+            position: fixed; top: 0; left: 0; width: 4px; height: 4px;
+            background: var(--plasma); border-radius: 50%;
             z-index: 10001; pointer-events: none;
+            transform: translate(-50%, -50%);
         }
-        #cursor-follower {
+        #cursor-ring {
             position: fixed; top: 0; left: 0; width: 40px; height: 40px;
-            border: 0.5px solid var(--steel); border-radius: 50%;
+            border: 1px solid var(--bone); border-radius: 50%;
             z-index: 10000; pointer-events: none;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s cubic-bezier(0.19, 1, 0.22, 1), height 0.3s cubic-bezier(0.19, 1, 0.22, 1), background 0.3s, border-color 0.3s;
+            mix-blend-mode: difference;
+        }
+        body.magnetic-active #cursor-ring {
+            width: 80px; height: 80px;
+            background: rgba(234, 230, 223, 0.1);
+            border-color: transparent;
+            backdrop-filter: blur(4px);
         }
 
-        /* --- NAVIGATION --- */
-        nav {
-            position: fixed; top: 40px; left: var(--safe-area); right: var(--safe-area);
-            display: flex; justify-content: space-between; align-items: baseline;
-            z-index: 1000; mix-blend-mode: difference;
-        }
-        .logo { font-family: var(--font-display); font-size: 2rem; letter-spacing: -0.05em; }
-        .nav-links { display: flex; gap: 40px; font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; }
-
-        /* --- INITIAL LOADER --- */
+        /* --- LOADER --- */
         #loader {
             position: fixed; inset: 0; z-index: 10002; background: var(--void);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        .load-pct { font-family: var(--font-display); font-size: 15vw; line-height: 0.8; }
+        .load-pct { 
+            font-size: 20vw; font-weight: 900; line-height: 0.8; 
+            letter-spacing: -0.05em; color: var(--bone);
+            position: relative;
+        }
+        .load-bar-container {
+            width: 200px; height: 2px; background: var(--steel); margin-top: 40px;
+            overflow: hidden; border-radius: 2px;
+        }
+        #load-bar {
+            width: 0%; height: 100%; background: var(--plasma);
+        }
+        .sys-text {
+            font-family: var(--font-hud); font-size: 10px; letter-spacing: 0.3em;
+            color: var(--steel); margin-top: 20px; text-transform: uppercase;
+        }
 
-        /* --- KINETIC VIEWPORT --- */
+        /* --- HUD / NAVIGATION --- */
+        .hud-element {
+            position: fixed; z-index: 1000; font-family: var(--font-hud);
+            font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+            mix-blend-mode: difference;
+        }
+        .hud-top-left { top: 40px; left: var(--safe-area); }
+        .hud-top-right { top: 40px; right: var(--safe-area); display: flex; gap: 30px; }
+        .hud-bottom-left { bottom: 40px; left: var(--safe-area); display: flex; flex-direction: column; gap: 5px; }
+        .hud-bottom-right { bottom: 40px; right: var(--safe-area); text-align: right; }
+
+        .logo { font-family: var(--font-display); font-size: 24px; font-weight: 900; letter-spacing: -0.02em; color: var(--bone); }
+        .nav-link { position: relative; padding: 10px; display: inline-block; color: var(--bone); }
+        
+        .status-indicator {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 16px; background: var(--glass); border: 1px solid var(--glass-border);
+            border-radius: 100px; backdrop-filter: blur(10px); color: var(--bone);
+        }
+        .status-dot { width: 6px; height: 6px; background: var(--plasma); border-radius: 50%; box-shadow: 0 0 10px var(--plasma); }
+
+        /* --- 3D KINETIC CAROUSEL --- */
         #viewport-3d {
             position: fixed; inset: 0; z-index: 10;
             display: flex; align-items: center; justify-content: center;
-            perspective: 2000px; pointer-events: none;
+            perspective: 1200px; pointer-events: none;
         }
         #carousel-container {
-            position: relative; width: 400px; height: 560px;
+            position: relative; width: min(400px, 80vw); height: min(560px, 60vh);
             transform-style: preserve-3d; will-change: transform;
         }
         .card {
             position: absolute; inset: 0; background: var(--charcoal);
-            border: 1px solid rgba(253, 251, 247, 0.05); overflow: hidden;
-            backface-visibility: hidden; transform-style: preserve-3d;
+            border-radius: var(--radius-max); overflow: hidden;
+            border: 1px solid var(--glass-border);
+            transform-style: preserve-3d;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            transition: border-color 0.5s;
         }
         .card img {
-            width: 100%; height: 100%; object-fit: cover; opacity: 0.4;
-            filter: grayscale(1); transform: scale(1.1);
-            transition: opacity 1s, filter 1s, transform 1s;
+            width: 100%; height: 100%; object-fit: cover; opacity: 0.3;
+            filter: grayscale(1) contrast(1.2); transform: scale(1.15);
+            transition: opacity 0.8s, filter 0.8s, transform 1s cubic-bezier(0.19, 1, 0.22, 1);
         }
-        .card.active img { opacity: 1; filter: grayscale(0); transform: scale(1); }
-        .card.active { border-color: var(--creme-glow); box-shadow: 0 0 40px var(--creme-glow); }
+        .card.active { 
+            border-color: rgba(212, 255, 0, 0.3); 
+            box-shadow: 0 0 80px rgba(212, 255, 0, 0.05), inset 0 0 40px rgba(255,255,255,0.02); 
+        }
+        .card.active img { opacity: 0.9; filter: grayscale(0.2) contrast(1); transform: scale(1); }
+        
+        /* Chromatic Aberration Layers */
+        .card::before, .card::after {
+            content: ''; position: absolute; inset: 0; background: inherit;
+            border-radius: inherit; z-index: -1; opacity: 0; pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        body.high-velocity .card.active::before { opacity: 0.7; transform: translateX(-4px); background-color: rgba(255,0,0,0.4); mix-blend-mode: screen; }
+        body.high-velocity .card.active::after { opacity: 0.7; transform: translateX(4px); background-color: rgba(0,255,255,0.4); mix-blend-mode: screen; }
 
-        /* --- CONTENT SCROLL LAYERS --- */
+        /* --- CONTENT SCROLL ARCHITECTURE --- */
         main { position: relative; z-index: 20; width: 100%; }
         section {
-            height: 100vh; width: 100%; display: flex; align-items: center;
+            min-height: 100vh; width: 100%; display: flex; flex-direction: column; justify-content: center;
             padding: 0 var(--safe-area); pointer-events: none;
+            position: relative;
         }
         
-        .hero-text {
-            width: 100%; max-width: 1200px;
+        .content-block {
+            width: 100%; max-width: 1400px; margin: 0 auto;
         }
-        .hero-text h2 {
-            font-family: var(--font-display); font-size: clamp(3rem, 10vw, 8rem);
-            line-height: 0.9; text-transform: uppercase; letter-spacing: -0.04em;
+        
+        .kinetic-text {
+            font-size: clamp(3rem, 12vw, 12rem); font-weight: 900;
+            line-height: 0.85; text-transform: uppercase; letter-spacing: -0.04em;
         }
-        .hero-text p {
-            font-size: 1rem; max-width: 400px; margin-top: 2rem;
-            color: var(--creme-muted); line-height: 1.6; font-weight: 300;
-        }
-
-        .side-metric {
-            position: absolute; right: var(--safe-area); font-family: var(--font-display);
-            font-size: 12vw; opacity: 0.03; text-transform: uppercase;
+        
+        .body-text {
+            font-family: var(--font-display); font-size: clamp(1rem, 2vw, 1.5rem);
+            max-width: 500px; margin-top: 3rem; color: var(--bone); opacity: 0.7;
+            line-height: 1.5; font-weight: 300;
         }
 
-        /* --- FOOTER HUD --- */
-        footer {
-            position: fixed; bottom: 40px; left: var(--safe-area); right: var(--safe-area);
-            display: flex; justify-content: space-between; align-items: flex-end;
-            z-index: 1000;
+        .align-right { text-align: right; margin-left: auto; }
+
+        /* Marquee Section */
+        .marquee-wrapper {
+            width: 100vw; overflow: hidden; position: relative; left: calc(-1 * var(--safe-area));
+            padding: 10vh 0; transform: rotate(-2deg);
         }
-        .status-pill {
-            padding: 8px 16px; border: 1px solid var(--steel); border-radius: 100px;
-            font-size: 9px; font-weight: 600; letter-spacing: 0.1em; color: var(--creme-muted);
+        .marquee-track {
+            display: flex; width: max-content; white-space: nowrap;
+            font-size: clamp(5rem, 18vw, 15rem); font-weight: 900;
+            text-transform: uppercase; line-height: 1; color: transparent;
+            -webkit-text-stroke: 1px rgba(234, 230, 223, 0.2);
         }
+        .marquee-track span { padding: 0 2vw; }
+        .marquee-track span.filled { color: var(--void); -webkit-text-stroke: 2px var(--plasma); text-shadow: 0 0 30px rgba(212,255,0,0.2); }
 
         /* --- HELPER CLASSES --- */
-        .reveal { overflow: hidden; }
-        .reveal span { display: block; transform: translateY(105%); }
+        .char, .word { display: inline-block; }
+        .word { overflow: hidden; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+        .char { transform: translateY(110%); }
+        .magnetic-wrap { display: inline-block; pointer-events: auto; }
+
+        /* Bento Grid Ending */
+        .bento-grid {
+            display: grid; grid-template-columns: repeat(12, 1fr);
+            gap: 20px; width: 100%; max-width: 1400px; margin: 10vh auto;
+            pointer-events: auto;
+        }
+        .bento-item {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm); padding: 40px;
+            backdrop-filter: blur(20px); transition: background 0.3s;
+        }
+        .bento-item:hover { background: rgba(255,255,255,0.06); }
+        .col-4 { grid-column: span 4; }
+        .col-8 { grid-column: span 8; }
+        .col-12 { grid-column: span 12; }
+        @media (max-width: 1024px) { .col-4, .col-8 { grid-column: span 12; } }
+
     </style>
 </head>
 <body>
 
     <div id="grain-layer"></div>
-    <div id="bg-canvas"></div>
-    <div id="cursor"></div>
-    <div id="cursor-follower"></div>
+    <canvas id="bg-canvas"></canvas>
+    
+    <div id="cursor-ring"></div>
+    <div id="cursor-dot"></div>
 
     <div id="loader">
         <div class="load-pct" id="load-val">00</div>
-        <div style="font-size: 10px; letter-spacing: 0.5em; margin-top: 20px;">CALIBRATING ENGINE</div>
+        <div class="load-bar-container"><div id="load-bar"></div></div>
+        <div class="sys-text" id="load-sys">INITIALIZING PHYSICS ENGINE</div>
     </div>
 
-    <nav>
-        <div class="logo">BNDR</div>
-        <div class="nav-links">
-            <div>Archive</div>
-            <div>Logic</div>
-            <div>Contact</div>
-        </div>
+    <!-- HUD -->
+    <div class="hud-element hud-top-left logo magnetic-wrap" data-magnetic>BNDR</div>
+    <nav class="hud-element hud-top-right">
+        <div class="magnetic-wrap" data-magnetic><a class="nav-link">Archive</a></div>
+        <div class="magnetic-wrap" data-magnetic><a class="nav-link">Intelligence</a></div>
+        <div class="magnetic-wrap" data-magnetic><a class="nav-link">Initiate</a></div>
     </nav>
+    <div class="hud-element hud-bottom-left">
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span id="scroll-state">SYS_IDLE</span>
+        </div>
+        <div style="opacity: 0.5; margin-top: 10px;">LAT: 33.4942° N // LON: 111.9261° W</div>
+    </div>
+    <div class="hud-element hud-bottom-right">
+        <div style="opacity: 0.5; margin-bottom: 5px;">VELOCITY_Y</div>
+        <div class="logo" style="font-size: 32px;" id="vel-val">0.00</div>
+        <div style="opacity: 0.5; margin-top: 5px;" id="idx-val">IDX_00</div>
+    </div>
 
+    <!-- KINETIC CORE -->
     <div id="viewport-3d">
         <div id="carousel-container"></div>
     </div>
 
+    <!-- NARRATIVE SEQUENCE -->
     <main>
-        <!-- Section 01: The Hook -->
-        <section id="trigger-1">
-            <div class="hero-text">
-                <h2 class="reveal"><span>Static is</span></h2>
-                <h2 class="reveal"><span>Dead Space</span></h2>
-                <p>We build objects that react. We don't ask for permission to occupy the screen—we demand it through kinetic friction and cold, precise movement.</p>
+        <section id="sec-1">
+            <div class="content-block">
+                <h1 class="kinetic-text split-text">STATIC IS</h1>
+                <h1 class="kinetic-text split-text">DEAD SPACE</h1>
+                <p class="body-text split-lines">We don't ask for permission to occupy the viewport. We command it through forensic precision, fluid dynamics, and absolute structural supremacy.</p>
             </div>
-            <div class="side-metric">01</div>
         </section>
 
-        <!-- Section 02: Space for the Twirl -->
-        <section id="trigger-2" style="height: 200vh;"></section>
-
-        <!-- Section 03: The Logic -->
-        <section id="trigger-3">
-            <div class="hero-text" style="margin-left: auto; text-align: right;">
-                <h2 class="reveal"><span>Mechanical</span></h2>
-                <h2 class="reveal"><span>Hierarchy</span></h2>
-                <p style="margin-left: auto;">Every pixel is a component. Every interaction is a command. We've stripped the "user experience" back to the hardware, where it belongs.</p>
+        <section id="sec-2" style="height: 150vh; justify-content: center;">
+            <div class="marquee-wrapper">
+                <div class="marquee-track" id="marquee">
+                    <span>APEX</span><span class="filled">PREDATOR</span><span>ARCHITECTURE</span><span>APEX</span><span class="filled">PREDATOR</span><span>ARCHITECTURE</span>
+                </div>
             </div>
-            <div class="side-metric" style="left: var(--safe-area); right: auto;">02</div>
         </section>
 
-        <!-- Section 04: The Exit -->
-        <section id="trigger-4">
-            <div class="hero-text">
-                <h2 class="reveal"><span>The New</span></h2>
-                <h2 class="reveal"><span>Standard</span></h2>
-                <p>Built for the operators. Optimized for the eye. Verified by the code. This is the BNDR protocol in its final, unyielding form.</p>
+        <section id="sec-3">
+            <div class="content-block align-right">
+                <h2 class="kinetic-text split-text">NEURAL</h2>
+                <h2 class="kinetic-text split-text">FRICTION</h2>
+                <p class="body-text align-right split-lines">Standard grids are for templated minds. We engineer asymmetric bento-structures that breathe, adapting to micro-movements to trigger dopamine flow at the sub-perceptual level.</p>
+            </div>
+        </section>
+
+        <section id="sec-4" style="height: 120vh; align-items: flex-end; padding-bottom: 20vh;">
+            <div class="bento-grid">
+                <div class="bento-item col-12 magnetic-wrap" data-magnetic style="text-align: center; padding: 100px 40px;">
+                    <h2 class="kinetic-text split-text" style="font-size: clamp(2rem, 8vw, 6rem);">INITIATE PROTOCOL</h2>
+                </div>
+                <div class="bento-item col-8">
+                    <div class="sys-text">DATA_STREAM</div>
+                    <p class="body-text" style="margin-top: 1rem;">All external libraries purged. Rendered entirely via raw trigonometry and Ghost Architect directives. No noise. Pure signal.</p>
+                </div>
+                <div class="bento-item col-4">
+                    <div class="sys-text">SYSTEM_STATE</div>
+                    <div class="logo" style="margin-top: 1rem; color: var(--plasma);">OPTIMIZED</div>
+                </div>
             </div>
         </section>
     </main>
 
-    <footer>
-        <div class="status-pill" id="scroll-label">IDLE_SYSTEM</div>
-        <div style="text-align: right;">
-            <div style="font-size: 9px; opacity: 0.5;">CURRENT_ELV</div>
-            <div class="logo" style="font-size: 1.5rem;" id="elv-val">000</div>
-        </div>
-    </footer>
-
     <script>
-        gsap.registerPlugin(ScrollTrigger);
-
+        // --- CONSTANTS & ASSETS ---
         const ASSETS = [
-            'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=800',
-            'https://images.unsplash.com/photo-1493246507139-91e8bef99c02?q=80&w=800',
-            'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=800',
-            'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800',
-            'https://images.unsplash.com/photo-1483058712412-4245e9b90334?q=80&w=800',
-            'https://images.unsplash.com/photo-1506318137071-a8e063b4b6a1?q=80&w=800'
+            'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200', // Abstract 1
+            'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1200', // Tech/Code
+            'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=1200', // Gradient
+            'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=1200', // 3D Render
+            'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=1200', // Matrix
+            'https://images.unsplash.com/photo-1618005192384-a83a8bd57fbe?q=80&w=1200', // Abstract 2
+            'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200'  // Circuit
         ];
 
-        class BNDREngine {
+        // --- UTILITY: TEXT SPLITTER ---
+        const splitTextCore = () => {
+            document.querySelectorAll('.split-text').forEach(el => {
+                const text = el.innerText;
+                el.innerHTML = '';
+                text.split(' ').forEach(word => {
+                    if(!word) return;
+                    const wordDiv = document.createElement('span');
+                    wordDiv.className = 'word';
+                    word.split('').forEach(char => {
+                        const charDiv = document.createElement('span');
+                        charDiv.className = 'char';
+                        charDiv.innerText = char;
+                        wordDiv.appendChild(charDiv);
+                    });
+                    el.appendChild(wordDiv);
+                    el.innerHTML += ' ';
+                });
+            });
+
+            document.querySelectorAll('.split-lines').forEach(el => {
+                const text = el.innerText;
+                el.innerHTML = '';
+                const lines = text.split('.'); // Simple sentence split for demo
+                lines.forEach(line => {
+                    if(line.trim() === '') return;
+                    const wordDiv = document.createElement('span');
+                    wordDiv.className = 'word';
+                    const charDiv = document.createElement('span');
+                    charDiv.className = 'char';
+                    charDiv.innerText = line.trim() + '.';
+                    wordDiv.appendChild(charDiv);
+                    el.appendChild(wordDiv);
+                    el.appendChild(document.createElement('br'));
+                });
+            });
+        };
+
+        // --- CORE ENGINE ---
+        class GhostArchitectEngine {
             constructor() {
-                this.container = document.getElementById('carousel-container');
+                // State
+                this.scroll = { current: 0, target: 0, vel: 0, max: 0 };
+                this.mouse = { x: window.innerWidth/2, y: window.innerHeight/2, tX: window.innerWidth/2, tY: window.innerHeight/2 };
+                this.isMagnetic = false;
+                this.audioCtx = null;
+                
+                // Elements
+                this.carousel = document.getElementById('carousel-container');
                 this.cards = [];
-                this.scroll = { current: 0, target: 0, vel: 0 };
-                this.init();
-            }
-
-            init() {
+                
+                // Initialize
+                splitTextCore();
+                this.initAudio();
                 this.createCards();
-                this.setupCursor();
-                this.setupScrollTriggers();
-                this.animateLoader();
-                this.render();
+                this.initCanvas();
+                this.initCursor();
+                this.runLoader();
             }
 
+            // --- ACOUSTICS: Synthesized Ticks ---
+            initAudio() {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if(!AudioContext) return;
+                
+                document.body.addEventListener('click', () => {
+                    if(!this.audioCtx) this.audioCtx = new AudioContext();
+                }, {once:true});
+
+                this.playTick = (vol = 0.1, freq = 150) => {
+                    if(!this.audioCtx || this.audioCtx.state === 'suspended') return;
+                    const osc = this.audioCtx.createOscillator();
+                    const gain = this.audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.audioCtx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(vol, this.audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(this.audioCtx.currentTime + 0.1);
+                };
+            }
+
+            // --- PARTICLE WEB: Raw Canvas ---
+            initCanvas() {
+                this.canvas = document.getElementById('bg-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                
+                const resize = () => {
+                    this.canvas.width = window.innerWidth;
+                    this.canvas.height = window.innerHeight;
+                };
+                window.addEventListener('resize', resize);
+                resize();
+
+                for(let i=0; i<80; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: (Math.random() - 0.5) * 0.5,
+                        baseSize: Math.random() * 1.5 + 0.5
+                    });
+                }
+            }
+
+            drawCanvas() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.fillStyle = 'rgba(234, 230, 223, 0.5)';
+                this.ctx.strokeStyle = 'rgba(234, 230, 223, 0.05)';
+                this.ctx.lineWidth = 0.5;
+
+                const scrollDistortion = this.scroll.vel * 0.05;
+
+                for(let i=0; i<this.particles.length; i++) {
+                    let p = this.particles[i];
+                    
+                    // Velocity influence
+                    p.y -= scrollDistortion * (p.baseSize);
+                    
+                    // Base movement
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    // Wrap
+                    if(p.x < 0) p.x = this.canvas.width;
+                    if(p.x > this.canvas.width) p.x = 0;
+                    if(p.y < 0) p.y = this.canvas.height;
+                    if(p.y > this.canvas.height) p.y = 0;
+
+                    // Mouse repel
+                    const dx = this.mouse.x - p.x;
+                    const dy = this.mouse.y - p.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if(dist < 150) {
+                        p.x -= (dx/dist) * 2;
+                        p.y -= (dy/dist) * 2;
+                    }
+
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.baseSize, 0, Math.PI*2);
+                    this.ctx.fill();
+
+                    // Connect
+                    for(let j=i+1; j<this.particles.length; j++) {
+                        let p2 = this.particles[j];
+                        const dx2 = p.x - p2.x;
+                        const dy2 = p.y - p2.y;
+                        const dist2 = dx2*dx2 + dy2*dy2;
+                        if(dist2 < 15000) {
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(p.x, p.y);
+                            this.ctx.lineTo(p2.x, p2.y);
+                            this.ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            // --- CAROUSEL CREATION ---
             createCards() {
                 ASSETS.forEach((src, i) => {
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.innerHTML = `<img src="${src}" alt="asset_${i}">`;
-                    this.container.appendChild(card);
+                    this.carousel.appendChild(card);
                     
                     this.cards.push({
                         el: card,
                         img: card.querySelector('img'),
+                        index: i,
                         setter: {
                             x: gsap.quickSetter(card, "x", "px"),
                             y: gsap.quickSetter(card, "y", "px"),
                             z: gsap.quickSetter(card, "z", "px"),
                             rY: gsap.quickSetter(card, "rotationY", "deg"),
+                            rX: gsap.quickSetter(card, "rotationX", "deg"),
                             scale: gsap.quickSetter(card, "scale"),
                             opacity: gsap.quickSetter(card, "opacity")
                         }
@@ -265,98 +519,224 @@
                 });
             }
 
-            setupCursor() {
-                const c = document.getElementById('cursor');
-                const f = document.getElementById('cursor-follower');
-                const xC = gsap.quickTo(c, "x", {duration: 0.1});
-                const yC = gsap.quickTo(c, "y", {duration: 0.1});
-                const xF = gsap.quickTo(f, "x", {duration: 0.4});
-                const yF = gsap.quickTo(f, "y", {duration: 0.4});
+            // --- OPTICAL TRACKING ---
+            initCursor() {
+                const dot = document.getElementById('cursor-dot');
+                const ring = document.getElementById('cursor-ring');
+                
+                const xDot = gsap.quickTo(dot, "x", {duration: 0.1, ease: "power3"});
+                const yDot = gsap.quickTo(dot, "y", {duration: 0.1, ease: "power3"});
+                const xRing = gsap.quickTo(ring, "x", {duration: 0.5, ease: "power3.out"});
+                const yRing = gsap.quickTo(ring, "y", {duration: 0.5, ease: "power3.out"});
 
                 window.addEventListener('mousemove', e => {
-                    xC(e.clientX - 3); yC(e.clientY - 3);
-                    xF(e.clientX - 20); yF(e.clientY - 20);
+                    this.mouse.tX = e.clientX;
+                    this.mouse.tY = e.clientY;
+                });
+
+                // Magnetic hover logic
+                document.querySelectorAll('[data-magnetic]').forEach(el => {
+                    el.addEventListener('mouseenter', () => {
+                        this.isMagnetic = true;
+                        document.body.classList.add('magnetic-active');
+                        if(this.playTick) this.playTick(0.05, 400);
+                    });
+                    el.addEventListener('mousemove', (e) => {
+                        const rect = el.getBoundingClientRect();
+                        const cx = rect.left + rect.width/2;
+                        const cy = rect.top + rect.height/2;
+                        // Magnet pull on element
+                        gsap.to(el, { x: (e.clientX - cx)*0.2, y: (e.clientY - cy)*0.2, duration: 0.4, ease: "power2.out" });
+                        // Snap cursor to center
+                        this.mouse.tX = cx; this.mouse.tY = cy;
+                    });
+                    el.addEventListener('mouseleave', () => {
+                        this.isMagnetic = false;
+                        document.body.classList.remove('magnetic-active');
+                        gsap.to(el, { x: 0, y: 0, duration: 0.8, ease: "elastic.out(1, 0.3)" });
+                    });
+                });
+
+                // Loop
+                gsap.ticker.add(() => {
+                    this.mouse.x += (this.mouse.tX - this.mouse.x) * 0.2;
+                    this.mouse.y += (this.mouse.tY - this.mouse.y) * 0.2;
+                    xDot(this.mouse.x); yDot(this.mouse.y);
+                    xRing(this.mouse.tX); yRing(this.mouse.tY); // Ring follows target tightly, dot smooth
                 });
             }
 
-            animateLoader() {
-                const tl = gsap.timeline();
-                tl.to("#load-val", {
-                    innerText: 100,
-                    duration: 1.5,
-                    snap: { innerText: 1 },
-                    ease: "power2.inOut"
+            // --- CINEMATIC LOADER ---
+            runLoader() {
+                const tl = gsap.timeline({
+                    onComplete: () => this.initScrollNarrative()
                 });
+                
+                // Simulate processing
+                let pct = { val: 0 };
+                tl.to(pct, {
+                    val: 100, duration: 2, ease: "power4.inOut",
+                    onUpdate: () => {
+                        document.getElementById('load-val').innerText = Math.floor(pct.val).toString().padStart(2, '0');
+                        document.getElementById('load-bar').style.width = `${pct.val}%`;
+                        if(Math.random() > 0.8 && this.playTick) this.playTick(0.02, 600);
+                    }
+                });
+                
+                tl.to("#load-sys", { textContent: "BYPASSING PROTOCOLS", duration: 0.5, snap: "textContent"}, "-=1");
+
                 tl.to("#loader", {
-                    yPercent: -100,
-                    duration: 1.2,
-                    ease: "expo.inOut"
+                    clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)",
+                    duration: 1.2, ease: "expo.inOut"
                 });
-                tl.to(".reveal span", {
-                    y: 0,
-                    stagger: 0.1,
-                    duration: 1.5,
-                    ease: "expo.out"
-                }, "-=0.5");
+
+                // Intro animations
+                tl.from(".hud-element", { y: -20, opacity: 0, stagger: 0.1, duration: 1, ease: "power3.out" }, "-=0.8");
+                tl.to("#sec-1 .char", { y: "0%", stagger: 0.02, duration: 1.2, ease: "expo.out" }, "-=1");
             }
 
-            setupScrollTriggers() {
+            // --- SCROLL LOGIC & TIMELINES ---
+            initScrollNarrative() {
+                gsap.registerPlugin(ScrollTrigger);
+
                 window.addEventListener('scroll', () => {
                     this.scroll.target = window.scrollY;
-                    document.getElementById('elv-val').innerText = Math.round(window.scrollY / 10).toString().padStart(3, '0');
-                    document.getElementById('scroll-label').innerText = window.scrollY > 10 ? 'SYSTEM_ACTIVE' : 'IDLE_SYSTEM';
+                    this.scroll.max = document.body.scrollHeight - window.innerHeight;
                 });
+
+                // Marquee Parallax
+                gsap.to("#marquee", {
+                    xPercent: -50,
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: "#sec-2",
+                        start: "top bottom",
+                        end: "bottom top",
+                        scrub: 0
+                    }
+                });
+
+                // Section Reveals
+                const sections = ['#sec-3', '#sec-4'];
+                sections.forEach(sec => {
+                    gsap.to(`${sec} .char`, {
+                        y: "0%",
+                        stagger: 0.01,
+                        duration: 1.5,
+                        ease: "expo.out",
+                        scrollTrigger: { trigger: sec, start: "top 70%" }
+                    });
+                });
+
+                // Start Render Loop
+                requestAnimationFrame(() => this.renderLoop());
             }
 
-            render() {
-                // Smooth interpolation
+            // --- THE MASTER LOOP ---
+            renderLoop() {
+                // Lerp Scroll
                 const last = this.scroll.current;
-                this.scroll.current += (this.scroll.target - this.scroll.current) * 0.1;
+                this.scroll.current += (this.scroll.target - this.scroll.current) * 0.08;
                 this.scroll.vel = this.scroll.current - last;
 
-                const rotation = this.scroll.current * 0.15;
-                const radius = window.innerWidth < 768 ? 250 : 500;
+                // Update HUD
+                const absVel = Math.abs(this.scroll.vel);
+                document.getElementById('vel-val').innerText = absVel.toFixed(2);
+                document.getElementById('scroll-state').innerText = absVel > 1 ? 'KINETIC_ACTIVE' : 'SYS_IDLE';
+                
+                // Chromatic Aberration trigger
+                if(absVel > 20) {
+                    document.body.classList.add('high-velocity');
+                } else {
+                    document.body.classList.remove('high-velocity');
+                }
+
+                // Audio feedback on fast scroll
+                if(absVel > 30 && Math.random() > 0.8 && this.playTick) {
+                    this.playTick(Math.min(0.1, absVel/1000), 100 + absVel);
+                }
+
+                // Draw Canvas
+                this.drawCanvas();
+
+                // 3D Carousel Math (The Math Organism)
+                // Normalize scroll progress (0 to 1)
+                const progress = this.scroll.max > 0 ? this.scroll.current / this.scroll.max : 0;
+                
+                // Rotation based on scroll progress (full scroll = multiple rotations)
+                const totalRotations = 3;
+                const rotationOffset = progress * Math.PI * 2 * totalRotations;
+                
+                const radius = window.innerWidth < 768 ? 200 : 350;
                 const step = (Math.PI * 2) / this.cards.length;
 
+                let activeIdx = 0;
+                let maxZ = -Infinity;
+
                 this.cards.forEach((card, i) => {
-                    const angle = (rotation * (Math.PI / 180)) + (i * step);
+                    const angle = rotationOffset + (i * step);
                     
                     const x = Math.sin(angle) * radius;
                     const z = Math.cos(angle) * radius;
-                    const y = Math.sin(angle * 2) * 80; // Helix twirl
+                    // Helix effect mapped to page scroll progress
+                    const y = Math.sin(angle * 2) * 50 - (progress * 200) + 100;
 
-                    // Normalizing Z for visual priority
+                    // Normalizing Z (-radius to +radius) to (0 to 1)
                     const zNorm = (z + radius) / (radius * 2);
                     
+                    // Apply Velocity Distortion
+                    const skewX = this.scroll.vel * 0.2;
+                    const rotX = this.scroll.vel * 0.1;
+
                     card.setter.x(x);
                     card.setter.y(y);
                     card.setter.z(z);
                     card.setter.rY(angle * (180 / Math.PI));
-                    card.setter.scale(0.5 + (zNorm * 0.5));
+                    card.setter.rX(rotX);
+                    
+                    // Depth scaling and opacity
+                    card.setter.scale(0.6 + (zNorm * 0.4));
                     card.setter.opacity(0.1 + (zNorm * 0.9));
+                    
+                    // Parallax Image
+                    gsap.set(card.img, { x: -this.scroll.vel * 1.5, y: -y * 0.1 });
+
                     card.el.style.zIndex = Math.round(z + 1000);
 
-                    // Image Parallax within cards
-                    gsap.set(card.img, { x: -this.scroll.vel * 2 });
+                    // Determine Active
+                    if(z > maxZ) {
+                        maxZ = z;
+                        activeIdx = i;
+                    }
 
-                    if (zNorm > 0.9) {
+                    if (zNorm > 0.95) {
                         card.el.classList.add('active');
                     } else {
                         card.el.classList.remove('active');
                     }
                 });
 
-                // Tilt viewport based on velocity
-                gsap.set(this.container, {
-                    rotationX: -this.scroll.vel * 0.2,
-                    rotationZ: this.scroll.vel * 0.05
+                document.getElementById('idx-val').innerText = `IDX_0${activeIdx}`;
+
+                // Viewport tilt based on mouse position (Parallax)
+                const tiltX = (this.mouse.y / window.innerHeight - 0.5) * -10;
+                const tiltY = (this.mouse.x / window.innerWidth - 0.5) * 10;
+                gsap.set(this.carousel, {
+                    rotationX: tiltX - (this.scroll.vel * 0.05),
+                    rotationY: tiltY
                 });
 
-                requestAnimationFrame(() => this.render());
+                requestAnimationFrame(() => this.renderLoop());
             }
         }
 
-        window.onload = () => new BNDREngine();
+        // --- IGNITION ---
+        window.onload = () => {
+            // Slight delay to ensure fonts load
+            setTimeout(() => {
+                new GhostArchitectEngine();
+            }, 500);
+        };
     </script>
 </body>
 </html>
