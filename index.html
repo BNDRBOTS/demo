@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<meta name="description" content="BNDR — Branding, 3D, Web. Professional digital assets built to turn visitors into clients.">
+<meta name="description" content="BNDR — Branding, 3D, Web. Custom code and visual identities built to grow your profit margins.">
 <meta name="theme-color" content="#020202">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -23,9 +23,9 @@
   --coal:       #0f0f10;
   --steel:      #1a1a1c;
   --iron:       #252528;
-  --mist:       #8a8a93; /* Brightened for readability */
-  --smoke:      #a1a1aa; /* Brightened significantly for WCAG AAA readability */
-  --ash:        #d4d4d8; /* Brightened for readability */
+  --mist:       #a1a1aa; /* High contrast gray */
+  --smoke:      #d4d4d8; /* Very bright gray for body text */
+  --ash:        #f4f4f5; /* Near white */
   --bone:       #e8e4df;
   --white:      #f5f3f0;
   --plasma:     #ccff00;
@@ -210,6 +210,7 @@ main{position:relative;z-index:20;pointer-events:none;}
 .kt-r{text-align:right;}
 .w{display:inline-block;overflow:hidden;vertical-align:bottom;}
 .ch{display:inline-block;will-change:transform;transform:translateY(108%);}
+/* Removed opacity:.5 entirely to guarantee readability */
 .copy{font-size:clamp(.78rem,1vw,.95rem);line-height:1.76;color:var(--smoke);max-width:420px;margin-top:2.6rem;font-family:'Courier New',monospace;letter-spacing:.025em;}
 .copy.r{text-align:right;margin-left:auto;}
 
@@ -223,7 +224,7 @@ main{position:relative;z-index:20;pointer-events:none;}
 .scroll-ln{width:1px;height:56px;background:var(--mist);position:relative;overflow:hidden;}
 .scroll-ln::after{content:'';position:absolute;top:-100%;left:0;right:0;bottom:0;background:var(--plasma);animation:scrollDn 1.9s var(--ease-inout) infinite;}
 @keyframes scrollDn{0%{top:-100%;bottom:100%}50%{top:0%;bottom:0%}100%{top:100%;bottom:-100%}}
-.scroll-lbl{font-family:'Courier New',monospace;font-size:8px;letter-spacing:.35em;color:var(--smoke);text-transform:uppercase;}
+.scroll-lbl{font-family:'Courier New',monospace;font-size:8px;letter-spacing:.35em;color:var(--mist);text-transform:uppercase;}
 /* Corner marks */
 .cm{position:absolute;width:16px;height:16px;pointer-events:none;}
 .cm.tl{top:20px;left:20px;border-top:1px solid var(--plasma);border-left:1px solid var(--plasma);}
@@ -270,7 +271,7 @@ main{position:relative;z-index:20;pointer-events:none;}
 .m-inner{display:flex;align-items:baseline;justify-content:space-between;transform:translateY(108%);will-change:transform;}
 .m-inner .dim{color:var(--mist);font-weight:300;}
 .m-inner .acc{color:var(--plasma);}
-.m-num{font-family:'Courier New',monospace;font-size:10px;letter-spacing:.2em;color:var(--smoke);align-self:center;}
+.m-num{font-family:'Courier New',monospace;font-size:10px;letter-spacing:.2em;color:var(--mist);align-self:center;}
 .build-note{margin-top:2.8rem;padding:clamp(18px,2.5vw,28px);border:1px solid var(--steel);border-radius:8px;background:var(--coal);pointer-events:auto;}
 .build-note-label{font-family:'Courier New',monospace;font-size:9px;letter-spacing:.3em;color:var(--plasma);text-transform:uppercase;margin-bottom:.8rem;}
 .build-note-body{font-family:'Courier New',monospace;font-size:clamp(.72rem,.9vw,.86rem);line-height:1.75;color:var(--smoke);}
@@ -284,13 +285,13 @@ main{position:relative;z-index:20;pointer-events:none;}
 .con-dot:nth-child(1){background:var(--red);}
 .con-dot:nth-child(2){background:var(--amber);}
 .con-dot:nth-child(3){background:var(--plasma);}
-.con-title{margin-left:auto;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.22em;color:var(--smoke);text-transform:uppercase;}
+.con-title{margin-left:auto;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.22em;color:var(--mist);text-transform:uppercase;}
 .con-body{padding:1.6rem 1.4rem;min-height:220px;font-family:'Courier New',monospace;font-size:clamp(.66rem,.88vw,.8rem);line-height:1.85;position:relative;}
 .con-line{opacity:0;display:block;}
 .con-line .p{color:var(--plasma);}
 .con-line .r{color:var(--red);}
 .con-line .b{color:var(--cyan);}
-.con-line .d{color:var(--smoke);}
+.con-line .d{color:var(--mist);}
 .con-csr{display:inline-block;width:7px;height:1.1em;background:var(--plasma);vertical-align:text-bottom;animation:blink .95s step-end infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
@@ -305,7 +306,7 @@ main{position:relative;z-index:20;pointer-events:none;}
 .cta-btn:hover::before{transform-origin:left;transform:scaleX(1);}
 .cta-btn:hover{color:var(--void);}
 .cta-btn span,.cta-btn .arrow{position:relative;z-index:1;}
-.cta-note{font-family:'Courier New',monospace;font-size:9px;letter-spacing:.24em;color:var(--smoke);text-transform:uppercase;margin-top:1.8rem;opacity:0;}
+.cta-note{font-family:'Courier New',monospace;font-size:9px;letter-spacing:.24em;color:var(--mist);text-transform:uppercase;margin-top:1.8rem;opacity:0;}
 
 /* ═══════════════════════════════════════════════════════════
    GOOGLE INPUT MODAL
@@ -345,8 +346,8 @@ main{position:relative;z-index:20;pointer-events:none;}
 .social-item svg{width:16px;height:16px;flex-shrink:0;fill:currentColor;}
 .footer-divider{border:none;border-top:1px solid var(--steel);margin:clamp(24px,3vw,40px) 0;}
 .footer-legal{max-width:1480px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
-.footer-copy{font-family:'Courier New',monospace;font-size:9px;letter-spacing:.18em;color:var(--smoke);text-transform:uppercase;}
-.footer-policy{font-family:'Courier New',monospace;font-size:9px;letter-spacing:.18em;color:var(--smoke);text-transform:uppercase;text-decoration:none;transition:color .3s;}
+.footer-copy{font-family:'Courier New',monospace;font-size:9px;letter-spacing:.18em;color:var(--mist);text-transform:uppercase;}
+.footer-policy{font-family:'Courier New',monospace;font-size:9px;letter-spacing:.18em;color:var(--mist);text-transform:uppercase;text-decoration:none;transition:color .3s;}
 .footer-policy:hover{color:var(--plasma);}
 
 /* ═══════════════════════════════════════════════════════════
@@ -399,14 +400,13 @@ main{position:relative;z-index:20;pointer-events:none;}
 <!-- ── NAV ── -->
 <nav id="nav" aria-label="Main navigation">
   <a class="nav-logo hov" data-cur="HOME" href="#s1" aria-label="BNDR home">
-    BNDR <span class="nav-logo-sub">// Studio</span>
+    BNDR <span class="nav-logo-sub">// Core</span>
   </a>
   <div class="nav-items">
     <a class="nav-item hov" data-cur="VIEW" href="#s-services">What We Build</a>
     <a class="nav-item hov" data-cur="READ" href="#s-manifesto">Our Standards</a>
-    <a class="nav-item hov" data-cur="BOOT" href="#s-console">Terminal</a>
-    <!-- CHANGED: href="#" and .open-modal combined safely -->
-    <a class="nav-cta hov open-modal" data-cur="START" href="#" id="nav-begin">Begin →</a>
+    <a class="nav-item hov" data-cur="BOOT" href="#s-console">Server Logs</a>
+    <a class="nav-cta hov open-modal" data-cur="CONTACT" href="#" id="nav-begin">Request Proposal →</a>
   </div>
   <button id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
     <span></span><span></span><span></span>
@@ -417,9 +417,8 @@ main{position:relative;z-index:20;pointer-events:none;}
 <div id="mobile-menu" role="dialog" aria-modal="true" aria-label="Mobile navigation">
   <a class="mm-item hov" data-cur="VIEW"  href="#s-services"  id="mm1">What We Build</a>
   <a class="mm-item hov" data-cur="READ"  href="#s-manifesto" id="mm2">Our Standards</a>
-  <a class="mm-item hov" data-cur="BOOT"  href="#s-console"   id="mm3">Terminal</a>
-  <!-- CHANGED: href="#" to prevent smooth-scroll conflict -->
-  <a class="mm-item hov open-modal" data-cur="START" href="#"       id="mm4">Begin →</a>
+  <a class="mm-item hov" data-cur="BOOT"  href="#s-console"   id="mm3">Server Logs</a>
+  <a class="mm-item hov open-modal" data-cur="CONTACT" href="#" id="mm4">Request Proposal →</a>
 </div>
 
 <!-- ── HUD ── -->
@@ -451,7 +450,7 @@ main{position:relative;z-index:20;pointer-events:none;}
 <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
   <div id="modal-box">
     <div class="modal-header">
-      <span class="modal-title" id="modal-title">Start Your Project // Contact</span>
+      <span class="modal-title" id="modal-title">Request Proposal // Contact</span>
       <button id="modal-close" aria-label="Close">✕</button>
     </div>
     <div id="modal-body">
@@ -477,13 +476,13 @@ main{position:relative;z-index:20;pointer-events:none;}
     <div class="cm bl"></div><div class="cm br"></div>
     <div class="float-num" style="right:-3vw;top:8vh;" data-d=".1">01</div>
     <div class="wrap sk">
-      <div class="hero-ey" id="hero-ey">BNDR // Commercial Studio</div>
+      <div class="hero-ey" id="hero-ey">BNDR // Custom Builds</div>
       <h1 class="kt">
         <span class="w"><span class="ch">R</span><span class="ch">E</span><span class="ch">A</span><span class="ch">L</span></span><br>
-        <span class="w"><span class="ch">W</span><span class="ch">O</span><span class="ch">R</span><span class="ch">K</span></span>
+        <span class="w"><span class="ch">C</span><span class="ch">O</span><span class="ch">D</span><span class="ch">E</span></span>
       </h1>
       <p class="copy">
-        Get a professional website and brand identity that builds instant trust. We create clean, fast, and easy-to-use sites that turn your visitors into paying customers.
+        Stop relying on generic templates. We write custom code and design specific visuals that grow your profit margins, reduce bounce rates, and lower your customer acquisition costs.
       </p>
     </div>
     <div class="scroll-cue" id="hero-sc">
@@ -495,14 +494,14 @@ main{position:relative;z-index:20;pointer-events:none;}
   <!-- ── MARQUEE 01 ── -->
   <div class="mq" data-spd="1.3" aria-hidden="true">
     <div class="mq-row">
-      <span class="mq-item">Branding</span>
-      <span class="mq-item s">3D Web Elements</span>
-      <span class="mq-item">Smooth Animation</span>
-      <span class="mq-item a">Fast Websites</span>
-      <span class="mq-item">Branding</span>
-      <span class="mq-item s">3D Web Elements</span>
-      <span class="mq-item">Smooth Animation</span>
-      <span class="mq-item a">Fast Websites</span>
+      <span class="mq-item">Brand Identity</span>
+      <span class="mq-item s">3D Graphics</span>
+      <span class="mq-item">Motion Design</span>
+      <span class="mq-item a">Custom Code</span>
+      <span class="mq-item">Brand Identity</span>
+      <span class="mq-item s">3D Graphics</span>
+      <span class="mq-item">Motion Design</span>
+      <span class="mq-item a">Custom Code</span>
     </div>
   </div>
 
@@ -515,63 +514,62 @@ main{position:relative;z-index:20;pointer-events:none;}
         <span>02 // What We Build</span>
       </div>
       <h2 class="kt">
-        <span class="w"><span class="ch">T</span><span class="ch">O</span><span class="ch">O</span><span class="ch">L</span><span class="ch">S</span></span><br>
-        <span class="w"><span class="ch">T</span><span class="ch">H</span><span class="ch">A</span><span class="ch">T</span></span>
-        <span class="w"><span class="ch">W</span><span class="ch">O</span><span class="ch">R</span><span class="ch">K</span></span>
+        <span class="w"><span class="ch">C</span><span class="ch">U</span><span class="ch">S</span><span class="ch">T</span><span class="ch">O</span><span class="ch">M</span></span><br>
+        <span class="w"><span class="ch">B</span><span class="ch">U</span><span class="ch">I</span><span class="ch">L</span><span class="ch">D</span><span class="ch">S</span></span>
       </h2>
 
       <div class="services">
 
-        <a class="srv hov" data-cur="VIEW" href="#" target="_blank" rel="noopener noreferrer" data-title="Branding">
+        <a class="srv hov" data-cur="VIEW" href="#" target="_blank" rel="noopener noreferrer" data-title="Brand Identity">
           <div class="srv-icon"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="12" height="12" stroke="#ccff00" stroke-width="1.5"/><rect x="20" y="4" width="12" height="12" stroke="rgba(232,228,223,.4)" stroke-width="1.5"/><rect x="4" y="20" width="12" height="12" stroke="rgba(232,228,223,.4)" stroke-width="1.5"/><rect x="20" y="20" width="12" height="12" stroke="rgba(232,228,223,.4)" stroke-width="1.5"/></svg></div>
           <div class="srv-num">01</div>
-          <div class="srv-title">Branding</div>
-          <div class="srv-body">Look established from day one. We design logos and brand styles that make your business look highly professional and trustworthy to new buyers.</div>
+          <div class="srv-title">Brand Identity</div>
+          <div class="srv-body">Command a premium price. Visual authority shifts the conversation from cost to value, making price-shopping irrelevant for your buyers.</div>
           <div class="srv-ext">Review Case Study →</div>
           <div class="srv-arrow">↗</div>
         </a>
 
-        <a class="srv hov" data-cur="VIEW" href="#" target="_blank" rel="noopener noreferrer" data-title="3D Elements">
+        <a class="srv hov" data-cur="VIEW" href="#" target="_blank" rel="noopener noreferrer" data-title="3D Graphics">
           <div class="srv-icon"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="18,4 32,26 4,26" stroke="#ccff00" stroke-width="1.5" fill="none"/><circle cx="18" cy="26" r="6" stroke="rgba(232,228,223,.4)" stroke-width="1.5" fill="none"/></svg></div>
           <div class="srv-num">02</div>
-          <div class="srv-title">3D Elements</div>
-          <div class="srv-body">Keep visitors on your site longer. We add interactive 3D graphics that grab attention and clearly show how your products work without forcing people to read long paragraphs.</div>
+          <div class="srv-title">3D Graphics</div>
+          <div class="srv-body">Increase product comprehension. Interactive models allow buyers to inspect your physical product closely without reading long paragraphs.</div>
           <div class="srv-ext">Review Case Study →</div>
           <div class="srv-arrow">↗</div>
         </a>
 
-        <a class="srv hov" data-cur="VIEW" href="#" target="_blank" rel="noopener noreferrer" data-title="Web Animation">
+        <a class="srv hov" data-cur="VIEW" href="#" target="_blank" rel="noopener noreferrer" data-title="Motion Design">
           <div class="srv-icon"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 18 Q12 8 18 18 Q24 28 32 18" stroke="#ccff00" stroke-width="1.5" fill="none"/><path d="M4 26 Q12 16 18 26 Q24 36 32 26" stroke="rgba(232,228,223,.2)" stroke-width="1" fill="none"/></svg></div>
           <div class="srv-num">03</div>
-          <div class="srv-title">Web Animation</div>
-          <div class="srv-body">Guide your customers naturally. We use smooth, simple animations to direct users straight to your checkout or contact forms without confusing them.</div>
+          <div class="srv-title">Motion Design</div>
+          <div class="srv-body">Control the buyer's focus. We use movement strictly to highlight your main value propositions and point users directly to your checkout.</div>
           <div class="srv-ext">Review Case Study →</div>
           <div class="srv-arrow">↗</div>
         </a>
 
-        <a class="srv hov" data-cur="VIEW" href="#" target="_blank" rel="noopener noreferrer" data-title="Fast Websites">
+        <a class="srv hov" data-cur="VIEW" href="#" target="_blank" rel="noopener noreferrer" data-title="Custom Code">
           <div class="srv-icon"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="10" width="28" height="16" rx="2" stroke="#ccff00" stroke-width="1.5"/><line x1="4" y1="16" x2="32" y2="16" stroke="rgba(232,228,223,.3)" stroke-width="1"/><circle cx="9" cy="13" r="1.5" fill="rgba(232,228,223,.4)"/><circle cx="14" cy="13" r="1.5" fill="rgba(232,228,223,.2)"/></svg></div>
           <div class="srv-num">04</div>
-          <div class="srv-title">Fast Websites</div>
-          <div class="srv-body">Stop losing sales to slow loading screens. We build lightweight pages that load instantly and work perfectly on every phone, tablet, and computer.</div>
+          <div class="srv-title">Custom Code</div>
+          <div class="srv-body">Capitalize on high traffic. We write lightweight pages that load instantly, ensuring zero dropped connections when demand spikes.</div>
           <div class="srv-ext">Review Case Study →</div>
           <div class="srv-arrow">↗</div>
         </a>
 
-        <a class="srv hov" data-cur="VIEW" href="#" target="_blank" rel="noopener noreferrer" data-title="UI Design">
+        <a class="srv hov" data-cur="VIEW" href="#" target="_blank" rel="noopener noreferrer" data-title="Layouts">
           <div class="srv-icon"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="28" height="28" rx="4" stroke="#ccff00" stroke-width="1.5"/><rect x="10" y="10" width="7" height="7" rx="1" stroke="rgba(232,228,223,.5)" stroke-width="1"/><rect x="10" y="21" width="16" height="2" rx="1" fill="rgba(232,228,223,.25)"/><rect x="10" y="25" width="10" height="2" rx="1" fill="rgba(232,228,223,.15)"/></svg></div>
           <div class="srv-num">05</div>
-          <div class="srv-title">UI Design</div>
-          <div class="srv-body">Make buying easy. We design clean and simple layouts so your customers can find exactly what they need and check out without any frustration.</div>
+          <div class="srv-title">Layouts</div>
+          <div class="srv-body">Eliminate cart abandonment. We organize information logically so customers find exactly what they want and buy immediately.</div>
           <div class="srv-ext">Review Case Study →</div>
           <div class="srv-arrow">↗</div>
         </a>
 
-        <a class="srv hov" data-cur="VIEW" href="#" target="_blank" rel="noopener noreferrer" data-title="Brand Guides">
+        <a class="srv hov" data-cur="VIEW" href="#" target="_blank" rel="noopener noreferrer" data-title="Brand Rules">
           <div class="srv-icon"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="10" x2="28" y2="10" stroke="#ccff00" stroke-width="1.5"/><line x1="8" y1="18" x2="24" y2="18" stroke="rgba(232,228,223,.4)" stroke-width="1.5"/><line x1="8" y1="26" x2="20" y2="26" stroke="rgba(232,228,223,.2)" stroke-width="1.5"/></svg></div>
           <div class="srv-num">06</div>
-          <div class="srv-title">Brand Guides</div>
-          <div class="srv-body">Keep your look consistent. We provide a clear rulebook for your colors and fonts so your marketing materials always look highly professional as your business grows.</div>
+          <div class="srv-title">Brand Rules</div>
+          <div class="srv-body">Enforce visual standards. Strict rulebooks ensure your external partners never dilute your brand's professional look on future ads.</div>
           <div class="srv-ext">Review Case Study →</div>
           <div class="srv-arrow">↗</div>
         </a>
@@ -586,11 +584,11 @@ main{position:relative;z-index:20;pointer-events:none;}
       <span class="mq-item s">Faster Load Times</span>
       <span class="mq-item">Higher Conversions</span>
       <span class="mq-item a">More Engagement</span>
-      <span class="mq-item">Clear Navigation</span>
+      <span class="mq-item">Clear Layouts</span>
       <span class="mq-item s">Faster Load Times</span>
       <span class="mq-item">Higher Conversions</span>
       <span class="mq-item a">More Engagement</span>
-      <span class="mq-item">Clear Navigation</span>
+      <span class="mq-item">Clear Layouts</span>
     </div>
   </div>
 
@@ -603,16 +601,16 @@ main{position:relative;z-index:20;pointer-events:none;}
         <span>03 // Our Standards</span>
       </div>
       <div class="manifesto">
-        <span class="m-line"><span class="m-inner"><span>EVERY DETAIL <span class="dim">HAS</span></span><span class="m-num">— 01</span></span></span>
-        <span class="m-line"><span class="m-inner"><span><span class="dim">A</span> PURPOSE.</span><span class="m-num">— 02</span></span></span>
+        <span class="m-line"><span class="m-inner"><span>EVERY DECISION <span class="dim">DRIVES</span></span><span class="m-num">— 01</span></span></span>
+        <span class="m-line"><span class="m-inner"><span><span class="dim">A</span> COMMERCIAL RETURN.</span><span class="m-num">— 02</span></span></span>
         <span class="m-line"><span class="m-inner"><span>WE BUILD <span class="dim">FOR YOUR</span></span><span class="m-num">— 03</span></span></span>
         <span class="m-line"><span class="m-inner"><span><span class="dim">PAYING</span> CUSTOMERS.</span><span class="m-num">— 04</span></span></span>
-        <span class="m-line"><span class="m-inner"><span>NO <span class="acc">USELESS</span></span><span class="m-num">— 05</span></span></span>
-        <span class="m-line"><span class="m-inner"><span><span class="dim">OR FLASHY</span> DECORATION.</span><span class="m-num">— 06</span></span></span>
+        <span class="m-line"><span class="m-inner"><span>NO <span class="acc">DECORATION</span></span><span class="m-num">— 05</span></span></span>
+        <span class="m-line"><span class="m-inner"><span><span class="dim">WITHOUT</span> FUNCTION.</span><span class="m-num">— 06</span></span></span>
       </div>
       <div class="build-note">
         <div class="build-note-label">Build Note</div>
-        <div class="build-note-body">We don't add flashy effects just to look cool. Every spacing, color, and interaction is carefully tested to make sure your website runs fast, looks professional, and drives actual sales for your business.</div>
+        <div class="build-note-body">We reject generic themes and useless effects. Every spacing, color, and interaction is tested to ensure your website runs fast, looks professional, and secures a dominant market position.</div>
       </div>
     </div>
   </section>
@@ -636,17 +634,17 @@ main{position:relative;z-index:20;pointer-events:none;}
     <div class="float-num" style="left:-4vw;top:10vh;" data-d=".09">04</div>
     <div class="wrap sk">
       <div class="sec-label rev" id="sl4">
-        <span>04 // Terminal</span>
+        <span>04 // Console</span>
         <span class="tick"></span>
       </div>
       <h2 class="kt sm kt-r">
-        <span class="w"><span class="ch">S</span><span class="ch">Y</span><span class="ch">S</span><span class="ch">T</span><span class="ch">E</span><span class="ch">M</span></span><br>
+        <span class="w"><span class="ch">S</span><span class="ch">E</span><span class="ch">R</span><span class="ch">V</span><span class="ch">E</span><span class="ch">R</span></span><br>
         <span class="w"><span class="ch">L</span><span class="ch">O</span><span class="ch">G</span><span class="ch">S</span></span>
       </h2>
       <div class="console">
         <div class="con-bar">
           <div class="con-dot"></div><div class="con-dot"></div><div class="con-dot"></div>
-          <div class="con-title">BNDR_ENGINE // v4.0.0</div>
+          <div class="con-title">BNDR_CORE // v4.0.0</div>
         </div>
         <div class="con-body" id="con-body">
           <div class="con-csr" id="con-csr"></div>
@@ -660,17 +658,16 @@ main{position:relative;z-index:20;pointer-events:none;}
     <div class="cm tl"></div><div class="cm tr"></div>
     <div class="cm bl"></div><div class="cm br"></div>
     <div class="wrap cta-wrap sk">
-      <div class="cta-super" id="cta-sup">Ready to Start</div>
+      <div class="cta-super" id="cta-sup">Maximize Your Return</div>
       <h2 class="kt" style="text-align:center;">
-        <span class="w"><span class="ch">B</span><span class="ch">E</span><span class="ch">G</span><span class="ch">I</span><span class="ch">N</span></span><br>
+        <span class="w"><span class="ch">S</span><span class="ch">T</span><span class="ch">A</span><span class="ch">R</span><span class="ch">T</span></span><br>
         <span class="w"><span class="ch">H</span><span class="ch">E</span><span class="ch">R</span><span class="ch">E</span></span>
       </h2>
-      <!-- CHANGED: Replaced href="#s-cta" with native <button> tag to avoid href jump -->
       <button class="cta-btn hov open-modal" data-cur="START" id="cta-open" aria-label="Open contact form">
-        <span>Start Your Project</span>
+        <span>Request Proposal</span>
         <span class="arrow">→</span>
       </button>
-      <div class="cta-note" id="cta-note">We focus on exceeding our client's expected results and clear communication. Get your project done correctly and on time.</div>
+      <div class="cta-note" id="cta-note">We match our code strictly with your commercial requirements. Expect measurable financial returns and rigid adherence to deadlines.</div>
     </div>
   </section>
 
@@ -684,7 +681,7 @@ main{position:relative;z-index:20;pointer-events:none;}
     <div class="footer-brand">
       <div class="footer-logo">BNDR</div>
       <div class="footer-tagline">
-        Professional websites and branding built to turn visitors into paying clients. We deliver work that actually helps your business grow.
+        Custom code and visual identities built to grow your profit margins. We deliver tools that serve your commercial goals.
       </div>
     </div>
 
@@ -780,25 +777,25 @@ const PI=Math.PI, TAU=PI*2;
 
 /* ── CARD DATA ── */
 const CARDS=[
-  {id:'01',name:'Branding',       sub:'Identity / 2024',    img:'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800'},
-  {id:'02',name:'3D Elements',    sub:'Visuals / Graphics', img:'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=800'},
-  {id:'03',name:'Web Animation',  sub:'Movement / Layout',     img:'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=800'},
-  {id:'04',name:'Fast Websites',  sub:'Code / Build',       img:'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800'},
-  {id:'05',name:'UI Design',      sub:'Interface / Layout',  img:'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=800'},
-  {id:'06',name:'Brand Guides',   sub:'Rules / Clarity',    img:'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800'},
+  {id:'01',name:'Brand Identity',       sub:'Positioning / 2024',    img:'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800'},
+  {id:'02',name:'Spatial Interaction', sub:'Dwell Time / UX', img:'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=800'},
+  {id:'03',name:'Motion Logic',         sub:'Funnel Guidance / 2024',     img:'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=800'},
+  {id:'04',name:'Modular Code',   sub:'Speed / Load Handling',       img:'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800'},
+  {id:'05',name:'Interface Logic', sub:'Conversion / Navigation',  img:'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=800'},
+  {id:'06',name:'Brand Governance',     sub:'Rules / Integrity',    img:'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800'},
 ];
 
 const TERM=[
-  {t:0,    h:'<span class="d">> </span><span class="p">BNDR_ENGINE</span> v4.0.0 initializing...'},
-  {t:520,  h:'<span class="d">> </span>Branding module... <span class="p">[LOADED]</span>'},
-  {t:1050, h:'<span class="d">> </span>3D graphics engine... <span class="p">[LOADED]</span>'},
-  {t:1600, h:'<span class="d">> </span>Animation logic... <span class="p">[LOADED]</span>'},
-  {t:2150, h:'<span class="d">> </span><span class="r">CHECK</span>: Finding slow components — fixing...'},
-  {t:2750, h:'<span class="d">> </span>Fast code compiled. <span class="p">[CLEAN]</span>'},
-  {t:3300, h:'<span class="d">> </span>UI rules applied. <span class="b">[OK]</span>'},
-  {t:3850, h:'<span class="d">> </span>Visuals tested for speed. <span class="b">[OK]</span>'},
-  {t:4400, h:'<span class="d">> </span>Brand guides exported. <span class="b">[OK]</span>'},
-  {t:5200, h:'<span class="d">> </span><span class="p">STATUS</span>: All systems green. Ready to build.'},
+  {t:0,    h:'<span class="d">> </span><span class="p">BNDR_CORE</span> loading...'},
+  {t:520,  h:'<span class="d">> </span>Demographic analysis... <span class="p">[COMPLETE]</span>'},
+  {t:1050, h:'<span class="d">> </span>Speed and retention tests... <span class="p">[COMPLETE]</span>'},
+  {t:1600, h:'<span class="d">> </span>Conversion tracking... <span class="p">[COMPLETE]</span>'},
+  {t:2150, h:'<span class="d">> </span><span class="r">CHECK</span>: Purchasing hesitation points identified — removing...'},
+  {t:2750, h:'<span class="d">> </span>Path to transaction secured. <span class="p">[READY]</span>'},
+  {t:3300, h:'<span class="d">> </span>WCAG accessibility requirements met. <span class="b">[OK]</span>'},
+  {t:3850, h:'<span class="d">> </span>Multi-device response verified. <span class="b">[OK]</span>'},
+  {t:4400, h:'<span class="d">> </span>Delivery protocols verified. <span class="b">[OK]</span>'},
+  {t:5200, h:'<span class="d">> </span><span class="p">STATE</span>: Build approved. Ready for market.'},
 ];
 
 /* ── GRAIN ── */
@@ -1143,7 +1140,8 @@ class Engine {
       const tr={trigger:id,start:'top 64%',toggleActions:'play none none reverse'};
       if(chars)gsap.to(`${id} .ch`,{y:'0%',duration:1.5,ease:'expo.out',stagger:i=>i*.036+Math.random()*.02,scrollTrigger:tr});
       if(tick)gsap.to(`${id} .tick`,{scaleX:1,duration:1.1,ease:'expo.out',scrollTrigger:tr});
-      if(copy)gsap.fromTo(`${id} .copy`,{opacity:0,y:20},{opacity:.5,y:0,duration:1,ease:'power3.out',scrollTrigger:tr});
+      // OPACITY FIX: Changed from .5 to 1 to guarantee high contrast and legibility
+      if(copy)gsap.fromTo(`${id} .copy`,{opacity:0,y:20},{opacity:1,y:0,duration:1,ease:'power3.out',scrollTrigger:tr});
     };
     sec('#s-services',true,true,false);
     sec('#s-manifesto',false,true,false);
